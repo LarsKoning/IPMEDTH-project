@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { VRButton } from 'three/addons/webxr/VRButton.js';
 
 console.log("Script is running...");
 
@@ -17,6 +18,9 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(new THREE.Color(0xe1e1ea))
 renderer.setAnimationLoop(animate);
 document.body.appendChild(renderer.domElement);
+
+document.body.appendChild( VRButton.createButton( renderer ) );
+renderer.xr.enabled = true;
 
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1.4);
 directionalLight.position.set(0, 10, 10);
