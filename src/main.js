@@ -84,21 +84,29 @@ function teleport() {
       camera.position.set(0, 0, -70);
       currentRotation = camera.rotation.set(-90, 0, 0); // Rotated to face back (180 degrees)
       controls.target.set(0, 0, -70);
+      console.log("Coords: ", camera.getWorldPosition(Vector))
+
       break;
     case 2:
       camera.position.set(50, 0, 0);
       currentRotation = camera.rotation.set(0, -90, 0); // Facing towards positive X
       controls.target.set(50, 0, 0);
+      console.log("Coords: ", camera.getWorldPosition(Vector))
+
       break;
     case 3:
       camera.position.set(0, 0, 70);
       currentRotation = camera.rotation.set(0, 135, 0); // Rotated to face forward (270 degrees)
       controls.target.set(0, 0, 70);
+      console.log("Coords: ", camera.getWorldPosition(Vector))
+
       break;
     case 0:
       camera.position.set(-50, 0, 0);
       currentRotation = camera.rotation.set(135, 90, 0); // Rotated to face back (180 degrees)
       controls.target.set(-50, 0, 0);
+      console.log("Coords: ", camera.getWorldPosition(Vector))
+
       break;
   }
 
@@ -111,14 +119,44 @@ function teleport() {
   );
 }
 
+let controller1, controller2;
+
+controller1 = renderer.xr.getController(0); // First controller
+controller2 = renderer.xr.getController(1); // Second controller
+scene.add(controller1);
+scene.add(controller2);
+
 const cameraGroup = new THREE.Group();
 cameraGroup.position.set(-50, 0, 0);  // Set the initial VR Headset Position.
+const Vector = new THREE.Vector3();
+const location = cameraGroup.getWorldPosition(Vector)
+
 
 renderer.xr.addEventListener('sessionstart', () => {
   if (gun) {
     gun.scale.set(0.1, 0.1, 0.1); 
     scene.add(cameraGroup);
     cameraGroup.add(camera);
+
+
+    controller1.addEventListener('connected', (event) => {
+      console.log("Controller 1 (Right hand) connected: ", event.data);
+      
+      const gamepad1 = event.data.gamepad;
+      if (gamepad1) {
+        controller1.gamepad = gamepad1; // Make sure to store the gamepad data correctly
+      }
+    });
+
+    // Event listener for controller2 (left hand)
+    controller2.addEventListener('connected', (event) => {
+      console.log("Controller 2 (Left hand) connected: ", event.data);
+
+      const gamepad2 = event.data.gamepad;
+      if (gamepad2) {
+        controller2.gamepad = gamepad2; // Store the gamepad data correctly
+      }
+    });
   }
 });
 
@@ -132,6 +170,7 @@ renderer.xr.addEventListener('sessionend', () => {
 });
 const loader = new GLTFLoader();
 let gun;
+
 
 loader.load(
   "../public/gun.glb",
@@ -148,17 +187,6 @@ loader.load(
 );
 
 
-let controller1, controller2;
-
-controller1 = renderer.xr.getController(0); // First controller
-controller2 = renderer.xr.getController(1); // Second controller
-scene.add(controller1);
-scene.add(controller2);
-
-// Store controllers' previous positions to detect movement
-const prevPos1 = new THREE.Vector3();
-const prevPos2 = new THREE.Vector3();
-
 function animate() {
   // Store current position
   const currentPos = {
@@ -167,7 +195,51 @@ function animate() {
     z: camera.position.z
   };
 
-  moveController();
+  const gamepad1 = controller1 ? controller1.gamepad : null;
+  const gamepad2 = controller2 ? controller2.gamepad : null;
+
+  if (controller1.gamepad) {
+    controller1.gamepad.buttons.forEach((button, index) => {
+      if (button.pressed) {
+        switch (index) {
+          case 0:
+            // Trigger action for button 0 (Trigger button)
+            shootGun();
+            break;
+          case 1:
+            // Action for button 1 (Grip button)
+            reloadGun();
+            break;
+          case 3:
+            // Action for button 2 (Custom action, e.g., rotate platform)
+            rotatePlatform();
+            break;
+          default:
+            console.log(`Controller 1: Button ${index} pressed`);
+        }
+      }
+    });
+  }
+
+  // Left Controller (controller2)
+  if (controller2.gamepad) {
+    controller2.gamepad.buttons.forEach((button, index) => {
+      if (button.pressed) {
+        switch (index) {
+          case 0:
+            // Action for button 0 on left controller
+            moveToNextPlatform();
+            break;
+          case 1:
+            // Action for button 1 on left controller
+            customActionLeft();
+            break;
+          default:
+            console.log(`Controller 2: Button ${index} pressed`);
+        }
+      }
+    });
+  }
 
   // Update controls
   controls.update();
@@ -178,21 +250,27 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-function moveController() {
-  const controller1Pos = new THREE.Vector3();
-  controller1.getWorldPosition(controller1Pos);
-  const controller2Pos = new THREE.Vector3();
-  controller2.getWorldPosition(controller2Pos);
+function shootGun() {
+  console.log("Shooting the gun!");
+  // Add shooting logic, animations, etc.
+}
 
-  const moveDirection = new THREE.Vector3();
-  moveDirection.subVectors(controller1Pos, prevPos1);
-  
-  // You can scale the movement vector to adjust movement speed
-  moveDirection.multiplyScalar(5);
+function reloadGun() {
+  console.log("Reloading the gun!");
+  // Add reloading logic
+}
 
-  camera.position.add(moveDirection);
+function rotatePlatform() {
+  console.log("Rotating platform!");
+  platforms[0].rotation.y += Math.PI / 2;  // Rotate platform 90 degrees
+}
 
-  // Update previous positions
-  prevPos1.copy(controller1Pos);
-  prevPos2.copy(controller2Pos);
+function moveToNextPlatform() {
+  console.log("Moving to the next platform!");
+  teleport();  // Use the teleport function you created
+}
+
+function customActionLeft() {
+  console.log("Custom action for left controller!");
+  // Add custom logic here
 }
