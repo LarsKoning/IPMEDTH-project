@@ -195,9 +195,6 @@ function animate() {
     z: camera.position.z
   };
 
-  const gamepad1 = controller1 ? controller1.gamepad : null;
-  const gamepad2 = controller2 ? controller2.gamepad : null;
-
   if (controller1.gamepad) {
     controller1.gamepad.buttons.forEach((button, index) => {
       if (button.pressed) {
@@ -211,8 +208,9 @@ function animate() {
             reloadGun();
             break;
           case 3:
-            // Action for button 2 (Custom action, e.g., rotate platform)
-            rotatePlatform();
+            // This is the joy-stick press key
+            // Action for button 3 
+            moveCharacterForward();
             break;
           default:
             console.log(`Controller 1: Button ${index} pressed`);
@@ -260,9 +258,25 @@ function reloadGun() {
   // Add reloading logic
 }
 
-function rotatePlatform() {
-  console.log("Rotating platform!");
-  platforms[0].rotation.y += Math.PI / 2;  // Rotate platform 90 degrees
+function moveCharacterForward() {
+  // This is the joy-stick press key
+  console.log("Moving character forward!");
+
+  // Get the direction the camera is facing
+  const direction = new THREE.Vector3();
+  camera.getWorldDirection(direction);
+
+  // Normalize the direction vector (so movement speed is consistent)
+  direction.normalize();
+
+  // Define speed of movement
+  const speed = 0.1; // Adjust the speed as needed
+
+  // Move the camera's group (cameraGroup) instead of the camera itself
+  cameraGroup.position.addScaledVector(direction, speed);
+
+  // Optionally, update controls target if needed
+  controls.target.copy(cameraGroup.position);
 }
 
 function moveToNextPlatform() {
