@@ -11,6 +11,8 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
+camera.position.set(-50, 0, 0);
+
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -36,10 +38,10 @@ const platformMaterial = new THREE.MeshBasicMaterial({ color: 0x808080 });
 // Create platforms
 const platforms = [];
 const positions = [
-  { x: -50, y: 0, z: 0 },
-  { x: 50, y: 0, z: 0 },
-  { x: 0, y: 0, z: -70 },
-  { x: 0, y: 0, z: 70 }
+  { x: -50, y: -1.7, z: 0 },
+  { x: 50, y: -1.7, z: 0 },
+  { x: 0, y: -1.7, z: -70 },
+  { x: 0, y: -1.7, z: 70 }
 ];
 
 positions.forEach((position, index) => {
@@ -109,15 +111,23 @@ function teleport() {
   );
 }
 
+const cameraGroup = new THREE.Group();
+cameraGroup.position.set(-50, 0, 0);  // Set the initial VR Headset Position.
+
 renderer.xr.addEventListener('sessionstart', () => {
   if (gun) {
     gun.scale.set(0.1, 0.1, 0.1); 
+    scene.add(cameraGroup);
+    cameraGroup.add(camera);
   }
 });
 
 renderer.xr.addEventListener('sessionend', () => {
   if (gun) {
     gun.scale.set(1, 1, 1);
+    scene.remove(cameraGroup);
+    cameraGroup.remove(camera);
+    camera.position.set(-50, 0, 0);
   }
 });
 const loader = new GLTFLoader();
@@ -127,8 +137,7 @@ loader.load(
   "../public/gun.glb",
   function (gltf) {
     gun = gltf.scene;
-    
-    // Scale the gun smaller in VR mode
+
     gun.scale.set(1, 1, 1); // Adjust scale for VR
     scene.add(gun);
   },
@@ -138,7 +147,17 @@ loader.load(
   }
 );
 
-camera.position.set(-50, 0, 0);
+
+let controller1, controller2;
+
+controller1 = renderer.xr.getController(0); // First controller
+controller2 = renderer.xr.getController(1); // Second controller
+scene.add(controller1);
+scene.add(controller2);
+
+// Store controllers' previous positions to detect movement
+const prevPos1 = new THREE.Vector3();
+const prevPos2 = new THREE.Vector3();
 
 function animate() {
   // Store current position
@@ -148,6 +167,8 @@ function animate() {
     z: camera.position.z
   };
 
+  moveController();
+
   // Update controls
   controls.update();
 
@@ -155,4 +176,23 @@ function animate() {
   camera.position.set(currentPos.x, currentPos.y, currentPos.z);
 
   renderer.render(scene, camera);
+}
+
+function moveController() {
+  const controller1Pos = new THREE.Vector3();
+  controller1.getWorldPosition(controller1Pos);
+  const controller2Pos = new THREE.Vector3();
+  controller2.getWorldPosition(controller2Pos);
+
+  const moveDirection = new THREE.Vector3();
+  moveDirection.subVectors(controller1Pos, prevPos1);
+  
+  // You can scale the movement vector to adjust movement speed
+  moveDirection.multiplyScalar(5);
+
+  camera.position.add(moveDirection);
+
+  // Update previous positions
+  prevPos1.copy(controller1Pos);
+  prevPos2.copy(controller2Pos);
 }
