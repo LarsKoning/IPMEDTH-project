@@ -3,6 +3,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
   75,
@@ -73,23 +74,6 @@ window.addEventListener('keydown', (event) => {
 });
 
 function teleport() {
-  console.log('Before Teleport:');
-  console.log('Camera Position:', {
-    x: camera.position.x.toFixed(2),
-    y: camera.position.y.toFixed(2),
-    z: camera.position.z.toFixed(2)
-  });
-  console.log('Camera Rotation:', {
-    x: camera.rotation.x.toFixed(2),
-    y: camera.rotation.y.toFixed(2),
-    z: camera.rotation.z.toFixed(2)
-  });
-  console.log('Controls Target:', {
-    x: controls.target.x.toFixed(2),
-    y: controls.target.y.toFixed(2),
-    z: controls.target.z.toFixed(2)
-  });
-
   // Store the current rotation
   let currentRotation
 
@@ -123,31 +107,30 @@ function teleport() {
     camera.position.y,
     camera.position.z + Math.cos(currentRotation.y)
   );
-
-  console.log('\nAfter Teleport:');
-  console.log('Camera Position:', {
-    x: camera.position.x.toFixed(2),
-    y: camera.position.y.toFixed(2),
-    z: camera.position.z.toFixed(2)
-  });
-  console.log('Camera Rotation:', {
-    x: camera.rotation.x.toFixed(2),
-    y: camera.rotation.y.toFixed(2),
-    z: camera.rotation.z.toFixed(2)
-  });
-  console.log('Controls Target:', {
-    x: controls.target.x.toFixed(2),
-    y: controls.target.y.toFixed(2),
-    z: controls.target.z.toFixed(2)
-  });
-  console.log('------------------------');
 }
 
+renderer.xr.addEventListener('sessionstart', () => {
+  if (gun) {
+    gun.scale.set(0.1, 0.1, 0.1); 
+  }
+});
+
+renderer.xr.addEventListener('sessionend', () => {
+  if (gun) {
+    gun.scale.set(1, 1, 1);
+  }
+});
 const loader = new GLTFLoader();
+let gun;
+
 loader.load(
   "../public/gun.glb",
   function (gltf) {
-    scene.add(gltf.scene);
+    gun = gltf.scene;
+    
+    // Scale the gun smaller in VR mode
+    gun.scale.set(1, 1, 1); // Adjust scale for VR
+    scene.add(gun);
   },
   undefined,
   function (error) {
