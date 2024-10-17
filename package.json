@@ -19,5 +19,8 @@
 		"deploy": "gh-pages -d dist"
 	},
 	"author": "",
-	"license": "ISC"
+	"license": "ISC",
+	"devDependencies": {
+		"lil-gui": "^0.19.2"
+	}
 }
