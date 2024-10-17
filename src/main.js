@@ -95,8 +95,8 @@ function updateDebugPanel(gamepad) {
   debugCtx.font = '24px Arial';
   
   if (gamepad.axes) {
-    debugCtx.fillText(`Joystick X: ${gamepad.axes[0].toFixed(2)}`, 10, 30);
-    debugCtx.fillText(`Joystick Y: ${gamepad.axes[1].toFixed(2)}`, 10, 60);
+    debugCtx.fillText(`Joystick X: ${gamepad.axes[2].toFixed(2)}`, 10, 30);
+    debugCtx.fillText(`Joystick Y: ${gamepad.axes[3].toFixed(2)}`, 10, 60);
   }
   
   const buttonLabels = [
@@ -132,16 +132,22 @@ renderer.xr.addEventListener('sessionstart', () => {
   }
   
   controller1.addEventListener('connected', (event) => {
-    const gamepad1 = event.data.gamepad;
-    if (gamepad1) {
-      controller1.gamepad = gamepad1;
+    if ('gamepad' in event.data) {
+      if ('axes' in event.data.gamepad) {
+        controller1.gamepad = event.data.gamepad;
+        console.log(controller1.gamepad);
+        
+      }
     }
   });
 
   controller2.addEventListener('connected', (event) => {
-    const gamepad2 = event.data.gamepad;
-    if (gamepad2) {
-      controller2.gamepad = gamepad2;
+    if ('gamepad' in event.data) {
+      if ('axes' in event.data.gamepad) {
+        controller2.gamepad = event.data.gamepad;
+        console.log(controller2.gamepad);
+        
+      }
     }
   });
 });
@@ -280,6 +286,13 @@ function animate() {
   }
 
   if (controller2.gamepad) {
+    updateDebugPanel(controller2.gamepad);
+
+    const [xAxis, yAxis] = controller2.gamepad.axes;
+    if (Math.abs(xAxis) > 0.1 || Math.abs(yAxis) > 0.1) {
+      handleJoystickMovement(xAxis, yAxis);
+    }
+
     controller2.gamepad.buttons.forEach((button, index) => {
       if (button.pressed) {
         switch (index) {
