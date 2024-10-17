@@ -83,7 +83,7 @@ scene.add(controller1);
 scene.add(controller2);
 
 const cameraGroup = new THREE.Group();
-cameraGroup.position.set(-50, 0, 0);
+cameraGroup.position.set(-5, -1.3, 0);
 const Vector = new THREE.Vector3();
 
 // Debug Panel Functions
@@ -127,9 +127,28 @@ renderer.xr.addEventListener('sessionstart', () => {
     cameraGroup.add(camera);
     
     // Position debug panel in front of user
-    debugPanel.position.set(0, -0.5, -2);
+    debugPanel.position.set(-1, 1.6, -2);
     cameraGroup.add(debugPanel);
   }
+
+  platforms.forEach((platform, index) => {
+    // Scale down the platforms (0.5x size in VR)
+    platform.scale.set(0.1, 0.1, 0.1);
+
+    // Move the platforms closer together (half the distance)
+    const closerPositions = [
+      { x: -5, y: 0, z: 0 },
+      { x: 5, y: 0, z: 0 },
+      { x: 0, y: 0, z: -10 },
+      { x: 0, y: 0, z: 10 }
+    ];
+
+    platform.position.set(
+      closerPositions[index].x,
+      closerPositions[index].y,
+      closerPositions[index].z
+    );
+  });
   
   controller1.addEventListener('connected', (event) => {
     if ('gamepad' in event.data) {
