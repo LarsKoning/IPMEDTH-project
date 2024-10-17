@@ -29,7 +29,7 @@ scene.add(directionalLightHelper);
 
 const loader = new GLTFLoader();
 loader.load(
-  "../assets/gun.glb",
+  "../public/gun.glb",
   function (gltf) {
     scene.add(gltf.scene);
   },
@@ -48,7 +48,7 @@ controls.keys = {
 	RIGHT: 'KeyD',
 	BOTTOM: 'KeyS'
 };
-camera.position.set(-50, 4, 0 );
+camera.position.set(-50, 0, 0 );
 
 function animate() {
   controls.update();
