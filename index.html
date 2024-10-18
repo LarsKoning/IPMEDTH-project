@@ -8,10 +8,25 @@
     body {
       margin: 0;
     }
+    #info {
+      position: absolute;
+      font-weight: bold;
+      top: 10px;
+      width: 100%;
+      text-align: center;
+      z-index: 100;
+      display: flex;
+      justify-content: space-evenly;
+    }
   </style>
 </head>
 
 <body>
+  <section id="info">
+    <p id="J">Press J to teleport to the platform on the left</p>
+    <p id="L">Press L to teleport to the platform on the right</p>
+  </section>
+  
   <script type="module" src="/src/main.js"></script>
 </body>
 

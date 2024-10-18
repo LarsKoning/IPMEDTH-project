@@ -28,22 +28,30 @@ scene.add(directionalLight);
 const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 5);
 scene.add(directionalLightHelper);
 
-// Geometry and Material
+// Geometry
 const platformGeometry = new THREE.CylinderGeometry(5, 5, 1, 64);
-const platformMaterial = new THREE.MeshBasicMaterial({ color: 0x808080 });
+
+const geometry = new THREE.ConeGeometry( 2, 5, 32 ); 
+const material = new THREE.MeshBasicMaterial( {color: 'red'} );
+const cone = new THREE.Mesh(geometry, material ); scene.add( cone );
+cone.position.set(-50, -10, 0);
+
+const scale = new THREE.Vector3(1, -1, 1);
+cone.scale.multiply(scale);
 
 // Create platforms
 const platforms = [];
-const positions = [
-  { x: -50, y: 0, z: 0 },
-  { x: 50, y: 0, z: 0 },
-  { x: 0, y: 0, z: -70 },
-  { x: 0, y: 0, z: 70 }
+const platformData = [
+  { x: -50, y: -20, z: 0, color: 'red' },
+  { x: 0, y: -20, z: 70, color: 'yellow' },
+  { x: 50, y: -20, z: 0, color: 'blue' },
+  { x: 0, y: -20, z: -70, color: 'green' },
 ];
 
-positions.forEach((position, index) => {
+platformData.forEach((data, index) => {
+  const platformMaterial = new THREE.MeshBasicMaterial({ color: data.color });
   const platform = new THREE.Mesh(platformGeometry, platformMaterial);
-  platform.position.set(position.x, position.y, position.z);
+  platform.position.set(data.x, data.y, data.z);
   scene.add(platform);
   platforms.push(platform);
 });
@@ -51,6 +59,8 @@ positions.forEach((position, index) => {
 let counter = 0;
 
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.minDistance = 10;
+controls.maxDistance = 100;
 controls.mouseButtons.RIGHT = false;
 controls.listenToKeyEvents(window);
 controls.keys = {
@@ -61,86 +71,49 @@ controls.keys = {
 };
 
 window.addEventListener('keydown', (event) => {
-  if (event.key === 't') {
-    if(counter <= 3) {
+  if (event.key === 'l') {
+    if(counter < 3) {
       counter++;
     }
-    if (counter == 4) {
+    else {
       counter = 0;
+    }
+    teleport();
+  }
+  if (event.key === 'j') {
+    if(counter > 0) {
+      counter--;
+    }
+    else{
+      counter = 3;
     }
     teleport();
   }
 });
 
-function teleport() {
-  console.log('Before Teleport:');
-  console.log('Camera Position:', {
-    x: camera.position.x.toFixed(2),
-    y: camera.position.y.toFixed(2),
-    z: camera.position.z.toFixed(2)
-  });
-  console.log('Camera Rotation:', {
-    x: camera.rotation.x.toFixed(2),
-    y: camera.rotation.y.toFixed(2),
-    z: camera.rotation.z.toFixed(2)
-  });
-  console.log('Controls Target:', {
-    x: controls.target.x.toFixed(2),
-    y: controls.target.y.toFixed(2),
-    z: controls.target.z.toFixed(2)
-  });
-
-  // Store the current rotation
-  let currentRotation
-
+function teleport() {  
   switch (counter) {
+    case 0:
+      camera.position.set(-50, 0, 0);
+      cone.position.set(-50, -10, 0);
+      cone.material.color.set('red');
+      break;
     case 1:
-      camera.position.set(0, 0, -70);
-      currentRotation = camera.rotation.set(-90, 0, 0); // Rotated to face back (180 degrees)
-      controls.target.set(0, 0, -70);
+      camera.position.set(0, 0, 70);
+      cone.position.set(0, -10, 70);
+      cone.material.color.set('yellow');
       break;
     case 2:
       camera.position.set(50, 0, 0);
-      currentRotation = camera.rotation.set(0, -90, 0); // Facing towards positive X
-      controls.target.set(50, 0, 0);
+      cone.position.set(50, -10, 0);
+      cone.material.color.set('blue');
       break;
     case 3:
-      camera.position.set(0, 0, 70);
-      currentRotation = camera.rotation.set(0, 135, 0); // Rotated to face forward (270 degrees)
-      controls.target.set(0, 0, 70);
-      break;
-    case 0:
-      camera.position.set(-50, 0, 0);
-      currentRotation = camera.rotation.set(135, 90, 0); // Rotated to face back (180 degrees)
-      controls.target.set(-50, 0, 0);
+      camera.position.set(0, 0, -70);
+      cone.position.set(0, -10, -70);
+      cone.material.color.set('green');
       break;
   }
-
-  // Restore the rotation
-  camera.rotation.copy(currentRotation);
-  controls.target.set(
-    camera.position.x + Math.sin(currentRotation.y),
-    camera.position.y,
-    camera.position.z + Math.cos(currentRotation.y)
-  );
-
-  console.log('\nAfter Teleport:');
-  console.log('Camera Position:', {
-    x: camera.position.x.toFixed(2),
-    y: camera.position.y.toFixed(2),
-    z: camera.position.z.toFixed(2)
-  });
-  console.log('Camera Rotation:', {
-    x: camera.rotation.x.toFixed(2),
-    y: camera.rotation.y.toFixed(2),
-    z: camera.rotation.z.toFixed(2)
-  });
-  console.log('Controls Target:', {
-    x: controls.target.x.toFixed(2),
-    y: controls.target.y.toFixed(2),
-    z: controls.target.z.toFixed(2)
-  });
-  console.log('------------------------');
 }
 
 const loader = new GLTFLoader();
@@ -158,18 +131,7 @@ loader.load(
 camera.position.set(-50, 0, 0);
 
 function animate() {
-  // Store current position
-  const currentPos = {
-    x: camera.position.x,
-    y: camera.position.y,
-    z: camera.position.z
-  };
-
-  // Update controls
   controls.update();
-
-  // Reset position while keeping rotation
-  camera.position.set(currentPos.x, currentPos.y, currentPos.z);
 
   renderer.render(scene, camera);
 }
