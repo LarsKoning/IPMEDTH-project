@@ -95,8 +95,19 @@ function updateDebugPanel(gamepad) {
   debugCtx.font = '24px Arial';
   
   if (gamepad.axes) {
-    debugCtx.fillText(`Joystick X: ${gamepad.axes[2].toFixed(2)}`, 10, 30);
-    debugCtx.fillText(`Joystick Y: ${gamepad.axes[3].toFixed(2)}`, 10, 60);
+    // Show all axes values
+    debugCtx.fillText(`Axes[0]: ${gamepad.axes[0]?.toFixed(3) || 'N/A'}`, 10, 60);
+    debugCtx.fillText(`Axes[1]: ${gamepad.axes[1]?.toFixed(3) || 'N/A'}`, 10, 90);
+    debugCtx.fillText(`Axes[2]: ${gamepad.axes[2]?.toFixed(3) || 'N/A'}`, 10, 120);
+    debugCtx.fillText(`Axes[3]: ${gamepad.axes[3]?.toFixed(3) || 'N/A'}`, 10, 150);
+    
+    // Show threshold checks
+    const threshold = 0.1;
+    debugCtx.fillText(`Threshold Check:`, 10, 180);
+    debugCtx.fillText(`X > ${threshold}: ${Math.abs(gamepad.axes[2]) > threshold}`, 10, 210);
+    debugCtx.fillText(`Y > ${threshold}: ${Math.abs(gamepad.axes[3]) > threshold}`, 10, 240);
+  } else {
+    debugCtx.fillText('No axes data available', 10, 60);
   }
   
   const buttonLabels = [
@@ -137,10 +148,10 @@ renderer.xr.addEventListener('sessionstart', () => {
 
     // Move the platforms closer together (half the distance)
     const closerPositions = [
-      { x: -5, y: 0, z: 0 },
-      { x: 5, y: 0, z: 0 },
-      { x: 0, y: 0, z: -10 },
-      { x: 0, y: 0, z: 10 }
+      { x: -5, y: -1.6, z: 0 },
+      { x: 5, y: -1.6, z: 0 },
+      { x: 0, y: -1.6, z: -10 },
+      { x: 0, y: -1.6, z: 10 }
     ];
 
     platform.position.set(
@@ -198,61 +209,8 @@ loader.load(
 );
 
 function handleJoystickMovement(xAxis, yAxis) {
-  const forward = new THREE.Vector3();
-  const right = new THREE.Vector3();
+  // Get the camera's forward direction
 
-  camera.getWorldDirection(forward);
-  right.crossVectors(forward, new THREE.Vector3(0, 1, 0));
-
-  forward.y = 0; // Keep forward direction flat
-  right.y = 0;   // Keep right direction flat
-
-  forward.normalize();
-  right.normalize();
-
-  const speed = 0.1; // Adjust speed as necessary
-
-  const moveX = right.multiplyScalar(xAxis * speed);
-  const moveZ = forward.multiplyScalar(-yAxis * speed);
-
-  cameraGroup.position.add(moveX);
-  cameraGroup.position.add(moveZ);
-
-  controls.target.copy(cameraGroup.position); // Update the control target to the new position
-}
-
-function teleport() {
-  let currentRotation;
-
-  switch (counter) {
-    case 1:
-      cameraGroup.position.set(0, 0, -70);
-      currentRotation = camera.rotation.set(-90, 0, 0);
-      controls.target.set(0, 0, -70);
-      break;
-    case 2:
-      cameraGroup.position.set(50, 0, 0);
-      currentRotation = camera.rotation.set(0, -90, 0);
-      controls.target.set(50, 0, 0);
-      break;
-    case 3:
-      cameraGroup.position.set(0, 0, 70);
-      currentRotation = camera.rotation.set(0, 135, 0);
-      controls.target.set(0, 0, 70);
-      break;
-    case 0:
-      cameraGroup.position.set(-50, 0, 0);
-      currentRotation = camera.rotation.set(135, 90, 0);
-      controls.target.set(-50, 0, 0);
-      break;
-  }
-
-  camera.rotation.copy(currentRotation);
-  controls.target.set(
-    cameraGroup.position.x + Math.sin(currentRotation.y),
-    cameraGroup.position.y,
-    cameraGroup.position.z + Math.cos(currentRotation.y)
-  );
 }
 
 // Action Functions
@@ -268,7 +226,7 @@ function reloadGun() {
 
 function moveToNextPlatform() {
   counter = (counter + 1) % 4;
-  teleport();
+  // teleport();
 }
 
 // Animation Loop
@@ -282,9 +240,12 @@ function animate() {
   if (controller1.gamepad) {
     updateDebugPanel(controller1.gamepad);
     
-    const [xAxis, yAxis] = controller1.gamepad.axes;
+    const xAxis = controller1.gamepad.axes[2]
+    const yAxis = controller1.gamepad.axes[3]
     if (Math.abs(xAxis) > 0.1 || Math.abs(yAxis) > 0.1) {
-      handleJoystickMovement(xAxis, yAxis);
+      cameraGroup.position.x = cameraGroup.position.x + (xAxis / 15);
+      cameraGroup.position.z = cameraGroup.position.z + (yAxis / 15);
+      controls.target.copy(cameraGroup.position);
     }
 
     controller1.gamepad.buttons.forEach((button, index) => {
@@ -305,11 +266,14 @@ function animate() {
   }
 
   if (controller2.gamepad) {
-    updateDebugPanel(controller2.gamepad);
+    
 
-    const [xAxis, yAxis] = controller2.gamepad.axes;
-    if (Math.abs(xAxis) > 0.1 || Math.abs(yAxis) > 0.1) {
-      handleJoystickMovement(xAxis, yAxis);
+    const xAxis = controller2.gamepad.axes[2]
+    if (Math.abs(xAxis) > 0.1) {
+      updateDebugPanel(controller2.gamepad);
+      // handleJoystickMovement(xAxis, yAxis);
+      cameraGroup.rotation.y = cameraGroup.rotation.y + (xAxis / 30);
+      controls.target.copy(cameraGroup.rotation);
     }
 
     controller2.gamepad.buttons.forEach((button, index) => {
@@ -324,7 +288,7 @@ function animate() {
   }
 
   controls.update();
-  camera.position.set(currentPos.x, currentPos.y, currentPos.z);
+
   renderer.render(scene, camera);
 }
 
