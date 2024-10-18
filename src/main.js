@@ -62,6 +62,9 @@ loader.load(
 
 // Control settings
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.maxDistance = 100;
+controls.minDistance = 10;
+
   // Mouse
 controls.mouseButtons.RIGHT = false;
 
@@ -78,24 +81,64 @@ controls.keys = {
 const gui = new GUI();
 
   // Define settings
-const controlSetting = {
+const controlSettings = {
   autoRotate: controls.autoRotate,
 }
 
+const cameraSettings = {
+  Zoom: 50,
+  reset: () => {
+    cameraFolder.reset();
+  }
+}
+
+const lightSettings = {
+  Intensity: directionalLight.intensity,
+  Color: '#ffffff',
+  Depth: directionalLight.position.x,
+  Height: directionalLight.position.y,
+  Angle: directionalLight.position.z,
+  reset: () => {
+    lightingFolder.reset();
+  }
+};
+
   // Initiate settings
-gui.add( controlSetting, 'autoRotate').name('Auto rotate');
-gui.add( camera.position, 'x', 10, 100).name('Zoom');
+gui.add( controlSettings, 'autoRotate')
+  .name('Auto Rotate')
+  .onChange( value =>{
+    controls.autoRotate = value;
+  });
 
+const cameraFolder = gui.addFolder('Camera')
+cameraFolder.add( cameraSettings, 'Zoom', 10, 100)
+  .onChange(value => {
+    // Bereken huidige hoek in het XZ vlak
+    const angle = Math.atan2(camera.position.z, camera.position.x);
+    
+    // Update x en z posities om de cirkelvormige beweging te behouden
+    camera.position.x = value * Math.cos(angle);
+    camera.position.z = value * Math.sin(angle);
+  });
+cameraFolder.add(cameraSettings, 'reset').name('Reset Camera');
 
- // Handle setting changes
-gui.onChange( event =>{
-  controls[event.property] = event.value;
-});
+const lightingFolder = gui.addFolder('Lighting');
+lightingFolder.add(lightSettings, 'Intensity', 0, 10)
+  .onChange(value => directionalLight.intensity = value);
+lightingFolder.addColor(lightSettings, 'Color')
+  .onChange(value => directionalLight.color.set(value));
+lightingFolder.add(lightSettings, 'Depth', -20, 20)
+  .onChange(value => directionalLight.position.x = value);
+lightingFolder.add(lightSettings, 'Height', -20, 20)
+  .onChange(value => directionalLight.position.y = value);
+lightingFolder.add(lightSettings, 'Angle', -20, 20)
+  .onChange(value => directionalLight.position.z = -value);
+lightingFolder.add(lightSettings, 'reset').name('Reset Lighting');
 
 
 // Initiate Scene
-function animate() {
+function animate() {  
   controls.update();
-
+  
   renderer.render(scene, camera);
 }
