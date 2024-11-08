@@ -1,0 +1,39 @@
+/* styles.css */
+
+body {
+    margin: 0;
+    overflow: hidden;
+}
+
+#menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+.menu-button {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid white;
+    color: white;
+    padding: 15px 30px;
+    margin: 10px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s;
+    border-radius: 5px;
+}
+
+.menu-button:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+#backButton {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: none;
+}
