@@ -1,56 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Three.js + WebGL Project</title>
-  <style>
-    body { margin: 0; }
-    canvas { display: block; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Menu</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        #menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .menu-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 15px 30px;
+            margin: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+            border-radius: 5px;
+        }
+        .menu-button:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        #backButton {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-  <!-- Using unpkg CDN for Three.js -->
-  <script src="https://unpkg.com/three@0.152.2/build/three.min.js"></script>
-  <script>
-    // Create the scene
-    const scene = new THREE.Scene();
+    <div id="menu">
+        <h1>Welkom! Kies een Omgeving waarin u wilt werken.</h1>
+        <button class="menu-button" onclick="loadScene('scene1')">Rotating Cube</button>
+        <button class="menu-button" onclick="loadScene('scene2')">Dancing Spheres</button>
+        <button class="menu-button" onclick="loadScene('scene3')">Wave Pattern</button>
+    </div>
+    <button id="backButton" class="menu-button" onclick="showMenu()">Back to Menu</button>
 
-    // Create a camera (Field of View, Aspect Ratio, Near, Far)
-    const camera = new THREE.PerspectiveCamera(
-      75, window.innerWidth / window.innerHeight, 0.1, 1000
-    );
-
-    // Create a WebGL renderer and attach it to the DOM
-    const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-    // Create a simple geometry (Cube) and a material, then combine them into a mesh
-    const geometry = new THREE.BoxGeometry();
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const cube = new THREE.Mesh(geometry, material);
-
-    // Add the cube to the scene
-    scene.add(cube);
-
-    // Set the camera position so it's not inside the cube
-    camera.position.z = 5;
-
-    // Animation loop: render the scene and update any animations
-    function animate() {
-      requestAnimationFrame(animate);
-
-      // Rotate the cube for some basic animation
-      cube.rotation.x += 0.01;
-      cube.rotation.y += 0.01;
-
-      // Render the scene from the perspective of the camera
-      renderer.render(scene, camera);
-    }
-
-    // Start the animation loop
-    animate();
+    <script type="module">
+      import { initScene, showMenu, loadScene } from './main.js';
+  
+      window.addEventListener('DOMContentLoaded', () => {
+          initScene();
+      });
+  
+      window.showMenu = showMenu;
+      window.loadScene = loadScene;
   </script>
 </body>
 </html>
