@@ -6,6 +6,7 @@ body {
     overflow: hidden;
 
     margin: 0;
+
     background-color: #D9D9D9; /* Background color */
 }
 
@@ -17,6 +18,7 @@ h1,
 h2,
 h3 {
     margin: 0; /* Reset default margin */
+
     color: white;
 }
 
@@ -91,8 +93,6 @@ button {
     background: #88A9EF; /* Primary color */
 }
 
-
-
 #backButton {
     color: #88A9EF;
     border-color: #88A9EF;
@@ -108,7 +108,7 @@ button {
 }
 
 #backButton:hover {
-    color: initial;
+    color: #D9D9D9;
     background: #88A9EF;
 }
 
