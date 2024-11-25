@@ -8,7 +8,6 @@ export function initScene() {
     document.body.appendChild(renderer.domElement);
 
     camera.position.z = 5;
-    scene.background = new THREE.Color(0x0f1525);
 
     addLights();
 }

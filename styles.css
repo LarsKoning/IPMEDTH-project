@@ -1,39 +1,127 @@
-/* styles.css */
+/* General body styling */
 
 body {
-    margin: 0;
+    font-family: 'Lexend', sans-serif; /* General font family */
+
     overflow: hidden;
+
+    margin: 0;
+
+    background-color: #D9D9D9; /* Background color */
 }
+
+/* Typography styles (generalized) */
+
+/* Headers */
+
+h1,
+h2,
+h3 {
+    margin: 0; /* Reset default margin */
+}
+
+/* Header 1 (Lexend SemiBold 35px) */
+
+h1 {
+    font-size: 35px;
+    font-weight: 600; /* SemiBold */
+}
+
+/* Header 2 (Lexend SemiBold 25px) */
+
+h2 {
+    font-size: 25px;
+    font-weight: 600; /* SemiBold */
+}
+
+/* Header 3 (Lexend Bold 18px) */
+
+h3 {
+    font-size: 18px;
+    font-weight: 700; /* Bold */
+}
+
+/* Body text (Lexend Light 14px) */
+
+p,
+span,
+a,
+button {
+    font-size: 14px;
+    font-weight: 300; /* Light */
+}
+
+/* Error message (Lexend Light 14px) */
+
+.error-message {
+    font-size: 14px;
+    font-weight: 300; /* Light */
+
+    color: #B20D30; /* Error color */
+}
+
+/* Menu styles */
 
 #menu {
     position: absolute;
     top: 50%;
     left: 50%;
+
     transform: translate(-50%, -50%);
     text-align: center;
-    color: white;
-    font-family: Arial, sans-serif;
 }
 
-.menu-button {
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid white;
-    color: white;
-    padding: 15px 30px;
+/* Buttons */
+
+.menu-button,
+#backButton {
+    font-size: 14px; /* Use general body font size */
+    font-weight: 700;
+
     margin: 10px;
+    padding: 15px 30px;
+
     cursor: pointer;
-    font-size: 18px;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
+    text-align: center;
+
+    color: none;
+    border: 2px solid;
     border-radius: 5px;
+    background: #88A9EF; /* Primary color */
 }
+
+#backButton {
+    color: #88A9EF;
+    border-color: #88A9EF;
+    background: none;
+}
+
+/* Hover state for buttons */
 
 .menu-button:hover {
-    background: rgba(255, 255, 255, 0.4);
+    color: #88A9EF;
+    border: 2px solid #88A9EF;
+    background: none;
 }
+
+#backButton:hover {
+    color: initial;
+    background: #88A9EF;
+}
+
+/* Back button specific styling */
 
 #backButton {
     position: absolute;
     top: 20px;
     left: 20px;
-    display: none;
+
+    display: none; /* Initially hidden */
+}
+
+/* Utility class for text alignment */
+
+.text-center {
+    text-align: center;
 }
