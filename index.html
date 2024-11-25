@@ -1,30 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Three.js Menu</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
 </head>
-<body>
-    <div id="menu">
-        <h1>Welkom! Kies een Omgeving waarin u wilt werken.</h1>
-        <button class="menu-button" onclick="loadScene('scene1')">Rotating Cube</button>
-        <button class="menu-button" onclick="loadScene('scene2')">Dancing Spheres</button>
-        <button class="menu-button" onclick="loadScene('scene3')">Wave Pattern</button>
-    </div>
-    <button id="backButton" class="menu-button" onclick="showMenu()">Back to Menu</button>
 
-    <script type="module">
-      import { initScene, showMenu, loadScene } from './main.js';
-  
-      window.addEventListener('DOMContentLoaded', () => {
-          initScene();
-      });
-  
-      window.showMenu = showMenu;
-      window.loadScene = loadScene;
-  </script>
+<body>
+    <div class="overlay">
+        <div id="menu">
+            <h1>Welkom! Kies een Omgeving waarin u wilt werken.</h1>
+            <button class="menu-button" onclick="loadScene('scene1')">Rotating Cube</button>
+            <button class="menu-button" onclick="loadScene('scene2')">Dancing Spheres</button>
+            <button class="menu-button" onclick="loadScene('scene3')">Wave Pattern</button>
+        </div>
+        <button id="backButton" class="menu-button" onclick="showMenu()">Back to Menu</button>
+
+        <script type="module">
+            import { showMenu, loadScene, initScene } from './main.js';
+            
+            window.onload = (event) => {
+                initScene();
+            };
+
+            window.showMenu = showMenu;
+            window.loadScene = loadScene;
+            
+            
+        </script>
+    </div>
 </body>
+
 </html>
