@@ -64,7 +64,7 @@ export function showMenu() {
         scene.remove(scene.children[0]); 
     }
 
-    document.getElementById('menu').style.display = 'block';
+    document.getElementById('menu').style.display = 'flex';
     document.getElementById('backButton').style.display = 'none';
     addLights();
 

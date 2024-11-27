@@ -13,13 +13,16 @@
 </head>
 
 <body>
-    <div class="overlay">
-        <div id="menu">
+    <section class="overlay">
+        <section id="menu">
             <h1>Welkom! Kies een Omgeving waarin u wilt werken.</h1>
-            <button class="menu-button" onclick="loadScene('scene1')">Rotating Cube</button>
-            <button class="menu-button" onclick="loadScene('scene2')">Dancing Spheres</button>
-            <button class="menu-button" onclick="loadScene('scene3')">Wave Pattern</button>
-        </div>
+
+            <section class="options">
+                <button class="menu-button" onclick="loadScene('scene1')">Rotating Cube</button>
+                <button class="menu-button" onclick="loadScene('scene2')">Dancing Spheres</button>
+                <button class="menu-button" onclick="loadScene('scene3')">Wave Pattern</button>
+            </section>
+        </section>
         <button id="backButton" class="menu-button" onclick="showMenu()">Back to Menu</button>
 
         <script type="module">
@@ -34,7 +37,7 @@
             
             
         </script>
-    </div>
+    </section>
 </body>
 
 </html>
