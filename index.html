@@ -1,43 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Three.js Menu</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
-</head>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
 
-<body>
+  <body>
     <section class="overlay">
-        <section id="menu">
-            <h1>Welkom! Kies een Omgeving waarin u wilt werken.</h1>
+      <section id="menu">
+        <h1>Welkom! Kies een Omgeving waarin u wilt werken.</h1>
 
-            <section class="options">
-                <button class="menu-button" onclick="loadScene('scene1')">Rotating Cube</button>
-                <button class="menu-button" onclick="loadScene('scene2')">Dancing Spheres</button>
-                <button class="menu-button" onclick="loadScene('scene3')">Wave Pattern</button>
-            </section>
+        <section class="options">
+          <button class="menu-button" onclick="loadScene('scene1')">
+            Rotating Cube
+          </button>
+          <button class="menu-button" onclick="loadScene('scene2')">
+            Dancing Spheres
+          </button>
+          <button class="menu-button" onclick="loadScene('scene3')">
+            Wave Pattern
+          </button>
+          <button class="menu-button" onclick="loadScene('scene4')">
+            3D Model
+          </button>
         </section>
-        <button id="backButton" class="menu-button" onclick="showMenu()">Back to Menu</button>
+      </section>
+      <button id="backButton" class="menu-button" onclick="showMenu()">
+        Back to Menu
+      </button>
 
-        <script type="module">
-            import { showMenu, loadScene, initScene } from './main.js';
-            
-            window.onload = (event) => {
-                initScene();
-            };
+      <script type="module">
+        import { showMenu, loadScene, initScene } from "./main.js";
 
-            window.showMenu = showMenu;
-            window.loadScene = loadScene;
-            
-            
-        </script>
+        window.onload = (event) => {
+          initScene();
+        };
+
+        window.showMenu = showMenu;
+        window.loadScene = loadScene;
+      </script>
     </section>
-</body>
-
+  </body>
 </html>
