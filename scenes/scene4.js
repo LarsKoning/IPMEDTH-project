@@ -2,15 +2,13 @@ import * as THREE from "../node_modules/three/build/three.module.js";
 import { OrbitControls } from "../node_modules/three/examples/jsm/controls/OrbitControls.js";
 import { STLLoader } from "../node_modules/three/examples/jsm/loaders/STLLoader.js";
 import { OBJLoader } from "../node_modules/three/examples/jsm/loaders/OBJLoader.js";
+import { FBXLoader } from "../node_modules/three/examples/jsm/loaders/FBXLoader.js";
 
-export function createScene4(scene, camera, renderer, setAnimationFrame) {
-  // Configure camera and renderer
+export function createScene4(scene, camera, renderer) {
   camera.position.set(0, 2, 5);
 
-  // Add controls
   const controls = new OrbitControls(camera, renderer.domElement);
 
-  // Add a basic ground plane
   const geometry = new THREE.PlaneGeometry(10, 10, 50, 50);
   const material = new THREE.MeshPhongMaterial({
     color: 0x4488ff,
@@ -18,22 +16,21 @@ export function createScene4(scene, camera, renderer, setAnimationFrame) {
   });
   const plane = new THREE.Mesh(geometry, material);
   plane.rotation.x = -Math.PI / 2;
+  plane.position.set(0, 0, 0);
   scene.add(plane);
 
-  // Lighting
   const light = new THREE.DirectionalLight(0xffffff, 1);
   light.position.set(5, 5, 5);
   scene.add(light);
 
-  const ambientLight = new THREE.AmbientLight(0x404040); // Soft light
+  const ambientLight = new THREE.AmbientLight(0x404040);
   scene.add(ambientLight);
 
-  // File input element
   let fileInput = document.getElementById("fileInput");
   if (!fileInput) {
     fileInput = document.createElement("input");
     fileInput.type = "file";
-    fileInput.accept = ".stl,.obj"; // Allow only STL and OBJ files
+    fileInput.accept = ".stl,.obj,.fbx";
     fileInput.id = "fileInput";
     fileInput.style.position = "absolute";
     fileInput.style.zIndex = 10;
@@ -44,7 +41,6 @@ export function createScene4(scene, camera, renderer, setAnimationFrame) {
 
   console.log("File input ready.");
 
-  // Event listener for file input
   fileInput.onchange = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -52,34 +48,81 @@ export function createScene4(scene, camera, renderer, setAnimationFrame) {
     const fileExtension = file.name.split(".").pop().toLowerCase();
 
     if (fileExtension === "stl") {
-      const stlLoader = new STLLoader();
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const geometry = stlLoader.parse(e.target.result);
-        const material = new THREE.MeshStandardMaterial({ color: 0x0077ff });
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.rotation.x = -Math.PI / 2;
-        scene.add(mesh);
-      };
-      reader.readAsArrayBuffer(file);
+      handleSTL(file);
     } else if (fileExtension === "obj") {
-      const objLoader = new OBJLoader();
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const object = objLoader.parse(e.target.result);
-        scene.add(object);
-      };
-      reader.readAsText(file);
+      handleOBJ(file);
+    } else if (fileExtension === "fbx") {
+      handleFBX(file);
     } else {
-      alert("Invalid file type. Please upload a .stl or .obj file.");
+      alert("Invalid file type. Please upload a .stl, .obj, or .fbx file.");
     }
   };
 
-  // Animation loop using setAnimationFrame for consistency
+  function resizeAndPosition(object) {
+    const box = new THREE.Box3().setFromObject(object);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+
+    const maxDimension = Math.max(size.x, size.y, size.z);
+    const desiredSize = 2;
+    const scaleFactor = desiredSize / maxDimension;
+    object.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+    const newBox = new THREE.Box3().setFromObject(object);
+    const newSize = new THREE.Vector3();
+    newBox.getSize(newSize);
+
+    object.position.sub(center);
+    object.position.y = newSize.y / 2;
+    object.position.z = 0;
+    return object;
+  }
+
+  function handleSTL(file) {
+    const stlLoader = new STLLoader();
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const geometry = stlLoader.parse(e.target.result);
+      const material = new THREE.MeshStandardMaterial({ color: 0x0077ff });
+      const mesh = new THREE.Mesh(geometry, material);
+
+      resizeAndPosition(mesh);
+      scene.add(mesh);
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function handleOBJ(file) {
+    const objLoader = new OBJLoader();
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const object = objLoader.parse(e.target.result);
+
+      resizeAndPosition(object);
+      scene.add(object);
+    };
+    reader.readAsText(file);
+  }
+
+  function handleFBX(file) {
+    const fbxLoader = new FBXLoader();
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const object = fbxLoader.parse(e.target.result);
+
+      resizeAndPosition(object);
+      scene.add(object);
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
   function animate() {
     controls.update();
     renderer.render(scene, camera);
-    setAnimationFrame(animate); // Correctly use the passed setAnimationFrame function
+    requestAnimationFrame(animate);
   }
-  setAnimationFrame(animate); // Start the animation loop
+  animate();
 }
