@@ -1,4 +1,6 @@
-let scene, camera, renderer, currentAnimation;
+import GUI from 'lil-gui';
+
+let scene, camera, renderer, currentAnimation, gui;
 
 export function initScene() {
     scene = new THREE.Scene();
@@ -34,6 +36,11 @@ export async function loadScene(sceneId) {
     addLights();
     scene.background = new THREE.Color(0xD9D9D9);
 
+    // Initiate GUI
+    gui = new GUI();
+    gui.title("Settings menu");
+
+
     // Hide menu and show back button
     document.getElementById('menu').style.display = 'none';
     document.getElementById('backButton').style.display = 'block';
@@ -42,15 +49,15 @@ export async function loadScene(sceneId) {
     switch(sceneId) {
         case 'scene1':
             const { createScene1 } = await import('./scenes/scene1.js');
-            createScene1(scene, camera, renderer);
+            createScene1(scene, camera, renderer, gui);
             break;
         case 'scene2':
             const { createScene2 } = await import('./scenes/scene2.js');
-            createScene2(scene, camera, renderer);
+            createScene2(scene, camera, renderer, gui);
             break;
         case 'scene3':
             const { createScene3 } = await import('./scenes/scene3.js');
-            createScene3(scene, camera, renderer);
+            createScene3(scene, camera, renderer, gui);
             break;
     }
 }
@@ -62,6 +69,7 @@ export function showMenu() {
 
     while(scene.children.length > 0) { 
         scene.remove(scene.children[0]); 
+        gui.destroy();
     }
 
     document.getElementById('menu').style.display = 'flex';

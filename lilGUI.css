@@ -1,0 +1,134 @@
+.lil-gui.autoPlace {
+    right: 0;
+}
+
+.lil-gui {
+    font-weight: 300;
+
+    /* Panel looks */
+
+    --width: 40rem;
+    --widget-color: #FFFCF9;
+    --hover-color: #e5e2e0;
+    --background-color: #F0F0F0;
+    --widget-border-radius: .8rem;
+    --focus-color: #FFFCF9;
+    --title-background-color: #F0F0F0;
+
+    /* Fonts */
+
+    --text-color: black;
+    --font-family: 'Lexend', sans-serif;
+    --font-family-mono: 'Lexend', sans-serif;
+    --title-text-color: black;
+    --font-size: 1.rem;
+    --string-color: black;
+    --number-color: black;
+    --input-font-size: 1.2rem;
+
+    /* Spacing */
+
+    --padding: 2.5rem;
+    --spacing: 1rem;
+    --widget-padding: 1.2rem 1.6rem;
+
+    /* Settings */
+
+    --slider-input-width: 7rem;
+    --checkbox-size: 2.4rem;
+}
+
+.lil-gui .title {
+    font-size: 1.8rem;
+    font-weight: 700;
+
+    position: relative;
+
+    width: 35rem;
+    margin: 0 var(--padding);
+    padding: 0;
+
+    border: none !important;
+    border-top: .2rem solid #D9D9D9 !important;
+}
+
+.lil-gui .title::before {
+    position: absolute;
+    right: 0;
+}
+
+.lil-gui .controller:not(.boolean, .option) {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: .5rem;
+}
+
+.lil-gui .controller .widget {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lil-gui .controller.number .slider {
+    height: .8rem;
+
+    background-color: #D9D9D9;
+}
+
+.lil-gui .controller.number .fill {
+    position: relative;
+}
+
+.lil-gui .controller.number .fill::after {
+    position: absolute;
+    z-index: 9999;
+    top: 50%;
+    left: 100%;
+
+    display: inline-block;
+
+    width: 1.6rem;
+    height: 1.6rem;
+
+    content: "";
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+
+    border-radius: 50%;
+    background-color: black;
+}
+
+.lil-gui .controller.function .widget button {
+    font-weight: 700;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    max-width: 50%;
+    margin: 1rem;
+    padding: 2.5rem 3rem;
+
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+
+    color: #F0F0F0;
+    border: .2rem solid;
+    border-radius: .5rem;
+    background: #88A9EF; /* Primary color */
+}
+
+.lil-gui .controller.function .widget button:hover {
+    color: #88A9EF;
+    border: .2rem solid #88A9EF;
+    background: none;
+}
+
+input {
+    font-weight: 300;
+
+    text-align: center;
+}

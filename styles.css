@@ -22,7 +22,8 @@ html {
 }
 
 body {
-    font-size: 1.8rem;
+    font-size: 1.4rem;
+    font-weight: 300; /* Light */
 
     align-items: center;
 
@@ -57,16 +58,6 @@ h3 {
     font-weight: 700; /* Bold */
 }
 
-/* Body text (Lexend Light 14px) */
-
-p,
-span,
-a,
-button {
-    font-size: 1.4rem;
-    font-weight: 300; /* Light */
-}
-
 /* Error message (Lexend Light 14px) */
 
 .error-message {
@@ -96,7 +87,7 @@ button {
 
 .menu-button,
 #backButton {
-    font-size: 1.4rem; /* Use general body font size */
+    font-size: 1.4rem;
     font-weight: 700;
 
     margin: 1rem;
