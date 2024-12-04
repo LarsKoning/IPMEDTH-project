@@ -1,3 +1,6 @@
+import {LASLoader} from '@loaders.gl/las';
+import {load} from '@loaders.gl/core';
+
 export function createScene3(scene, camera, renderer) {
     // Plane Geometry
     const geometry = new THREE.PlaneGeometry(10, 10, 50, 50);
