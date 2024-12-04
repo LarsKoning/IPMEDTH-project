@@ -80,7 +80,7 @@ export function createScene4(scene, camera, renderer) {
       object.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
       object.position.x = 0;
-      object.position.y = size.y - size.y; // Zorg dat het op de grond staat
+      object.position.y = size.y - size.y + 1; // Zorg dat het op de grond staat
     } else {
       console.warn("Bounding box is leeg. Controleer het model.");
     }
