@@ -1,6 +1,6 @@
 import GUI from 'lil-gui';
 
-let scene, camera, renderer, currentAnimation, gui;
+let scene, camera, renderer, currentAnimation, gui, fileInput;
 
 export function initScene() {
     scene = new THREE.Scene();
@@ -40,6 +40,30 @@ export async function loadScene(sceneId) {
     gui = new GUI();
     gui.title("Settings menu");
 
+    // Create a hidden file input
+    fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.style.display = 'none';
+    fileInput.accept = '.obj,.glb'
+    document.body.appendChild(fileInput);
+
+     // Add event listener for file input change
+     fileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            // Validate the file type
+            const allowedExtensions = ['.obj', '.glb'];
+            const fileExtension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+            
+            if (allowedExtensions.includes(fileExtension)) {
+                console.log(`File uploaded: ${file.name}`);
+                // Perform further actions here, such as reading the file or using it in your 3D scene
+            } else {
+                alert('Invalid file type. Please upload a .obj or .glb file.');
+            }
+        }
+    });
+
 
     // Hide menu and show back button
     document.getElementById('menu').style.display = 'none';
@@ -49,7 +73,7 @@ export async function loadScene(sceneId) {
     switch(sceneId) {
         case 'scene1':
             const { createScene1 } = await import('./scenes/scene1.js');
-            createScene1(scene, camera, renderer, gui);
+            createScene1(scene, camera, renderer, gui, fileInput);
             break;
         case 'scene2':
             const { createScene2 } = await import('./scenes/scene2.js');
@@ -70,6 +94,7 @@ export function showMenu() {
     while(scene.children.length > 0) { 
         scene.remove(scene.children[0]); 
         gui.destroy();
+        fileInput.remove();
     }
 
     document.getElementById('menu').style.display = 'flex';
