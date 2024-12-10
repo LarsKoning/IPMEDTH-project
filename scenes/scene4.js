@@ -63,21 +63,51 @@ export function createScene4(scene, camera, renderer) {
     } else if (fileExtension === "gltf" || fileExtension === "glb") {
       loadGLTF(file);
     } else {
-      alert("Invalid file type. Please upload a .stl, .obj, .fbx, .glb, or .gltf file.");
+      alert(
+        "Invalid file type. Please upload a .stl, .obj, .fbx, .glb, or .gltf file."
+      );
     }
   };
 
-  // Load STL file
-  function loadSTL(file) {
+  function resizeAndPosition(object) {
+    const box = new THREE.Box3();
+    object.traverse((child) => {
+      if (child.isMesh) {
+        box.expandByObject(child);
+      }
+    });
+
+    if (!box.isEmpty()) {
+      const size = new THREE.Vector3();
+      const center = new THREE.Vector3();
+
+      box.getSize(size);
+      box.getCenter(center);
+
+      const maxDimension = Math.max(size.x, size.y, size.z);
+      const desiredSize = 2;
+      const scaleFactor = desiredSize / maxDimension;
+
+      object.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+      object.position.x = 0;
+      object.position.y = size.y - size.y + 0.5; // Zorg dat het op de grond staat
+    } else {
+      console.warn("Bounding box is leeg. Controleer het model.");
+    }
+    return object;
+  }
+
+  function handleSTL(file) {
     const stlLoader = new STLLoader();
     const reader = new FileReader();
     reader.onload = function (e) {
       const geometry = stlLoader.parse(e.target.result);
       const material = new THREE.MeshStandardMaterial({ color: 0x0077ff });
       const mesh = new THREE.Mesh(geometry, material);
-      mesh.rotation.x = -Math.PI / 2;
-      mesh.position.set(0, 0, 0); // Position it on top of the plane
-      scaleModel(mesh);
+
+      mesh.geometry.center(); // Centreer de geometrie naar lokale coördinaten
+      resizeAndPosition(mesh);
       scene.add(mesh);
     };
     reader.readAsArrayBuffer(file);
@@ -89,8 +119,14 @@ export function createScene4(scene, camera, renderer) {
     const reader = new FileReader();
     reader.onload = function (e) {
       const object = objLoader.parse(e.target.result);
-      object.position.set(0, 0, 0); // Position it on top of the plane
-      scaleModel(object);
+
+      object.traverse((child) => {
+        if (child.isMesh) {
+          child.geometry.center(); // Centreer elk kind
+        }
+      });
+
+      resizeAndPosition(object);
       scene.add(object);
     };
     reader.readAsText(file);
@@ -102,8 +138,18 @@ export function createScene4(scene, camera, renderer) {
     const reader = new FileReader();
     reader.onload = function (e) {
       const object = fbxLoader.parse(e.target.result);
-      object.position.set(0, 0, 0); // Position it on top of the plane
-      scaleModel(object);
+
+      // Transformeer naar lokale coördinaten als nodig
+      object.traverse((child) => {
+        if (child.isMesh) {
+          child.geometry.applyMatrix4(child.matrixWorld);
+          child.position.set(0, 0, 0);
+          child.rotation.set(0, 0, 0);
+          child.updateMatrixWorld();
+        }
+      });
+
+      resizeAndPosition(object);
       scene.add(object);
     };
     reader.readAsArrayBuffer(file);
@@ -115,16 +161,21 @@ export function createScene4(scene, camera, renderer) {
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath("/path-to-draco/"); // Set path to Draco decoder
     gltfLoader.setDRACOLoader(dracoLoader);
-    
+
     const reader = new FileReader();
     reader.onload = function (e) {
-      gltfLoader.parse(e.target.result, '', function (gltf) {
-        gltf.scene.position.set(0, 0, 0); // Position it on top of the plane
-        scaleModel(gltf.scene);
-        scene.add(gltf.scene);
-      }, function (error) {
-        console.error("Error loading GLTF model:", error);
-      });
+      gltfLoader.parse(
+        e.target.result,
+        "",
+        function (gltf) {
+          gltf.scene.position.set(0, 0, 0); // Position it on top of the plane
+          scaleModel(gltf.scene);
+          scene.add(gltf.scene);
+        },
+        function (error) {
+          console.error("Error loading GLTF model:", error);
+        }
+      );
     };
     reader.readAsArrayBuffer(file);
   }

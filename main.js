@@ -73,8 +73,15 @@ export function showMenu() {
     scene.remove(scene.children[0]);
   }
 
+  // Remove the file input element if it exists
+  const fileInput = document.getElementById("fileInput");
+  if (fileInput) {
+    fileInput.remove();
+  }
+
   document.getElementById("menu").style.display = "flex";
   document.getElementById("backButton").style.display = "none";
+
   addLights();
 
   renderer.render(scene, camera);
