@@ -47,24 +47,6 @@ export async function loadScene(sceneId) {
     fileInput.accept = '.obj,.glb'
     document.body.appendChild(fileInput);
 
-     // Add event listener for file input change
-     fileInput.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            // Validate the file type
-            const allowedExtensions = ['.obj', '.glb'];
-            const fileExtension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
-            
-            if (allowedExtensions.includes(fileExtension)) {
-                console.log(`File uploaded: ${file.name}`);
-                // Perform further actions here, such as reading the file or using it in your 3D scene
-            } else {
-                alert('Invalid file type. Please upload a .obj or .glb file.');
-            }
-        }
-    });
-
-
     // Hide menu and show back button
     document.getElementById('menu').style.display = 'none';
     document.getElementById('backButton').style.display = 'block';

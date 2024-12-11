@@ -1,28 +1,62 @@
-import GUI from 'lil-gui';
+import { FBXLoader, GLTFLoader, STLLoader } from 'three/examples/jsm/Addons.js';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 
 export function createScene1(scene, camera, renderer, gui, fileInput) {
-    const geometry = new THREE.BoxGeometry();
-    const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
-    const cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
+    const loaderMap = {
+        '.obj': new OBJLoader(),
+        '.glb': new GLTFLoader(),
+        '.fbx': new FBXLoader(),
+        '.stl': new STLLoader(),
+    };
 
+    const filesList = ['Upload an object first'];
+    const loadedObjects = {};
+    let currentObject = null;
 
-
-    // Add event listener for file input change
-    fileInput.accept = '.obj,.glb'
-
-    fileInput.addEventListener('change', (event) => {
+    // Add event listener and accept for file input change
+    fileInput.accept = '.obj,.glb,.fbx,.stl'
+    fileInput.addEventListener('change', async (event) => {
         const file = event.target.files[0];
         if (file) {
             // Validate the file type
-            const allowedExtensions = ['.obj', '.glb'];
-            const fileExtension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+            const fileExtension = await file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
             
-            if (allowedExtensions.includes(fileExtension)) {
+            if(['.obj', '.glb', '.fbx', '.stl'].includes(fileExtension)) {
                 console.log(`File uploaded: ${file.name}`);
-                // Perform further actions here, such as reading the file or using it in your 3D scene
+
+                const fileURL = URL.createObjectURL(file);
+
+                try{
+                    const object = await new Promise((resolve, reject) => {
+                        loaderMap[fileExtension].load(
+                            fileURL,
+                            (loadedObjects) => resolve(loadedObjects),
+                            undefined,
+                            (error) => reject(error)
+                        );
+                    });
+
+                    loadedObjects[file.name] = object;
+
+                    if (filesList[0] === 'Upload an object first') {
+                        filesList.shift();
+                    }
+
+                    if (currentObject) {
+                        scene.remove(currentObject);
+                    }
+                    currentObject = object;
+                    scene.add(currentObject);
+                    selection.setValue(file.name);
+                    
+                    filesList.push(file.name);
+                    selection.options(filesList);
+                    alert(`Successfully loaded: ${file.name}`);
+                } catch (error) {
+                    console.error(`Error loading file: ${file.name}`, error)
+                }                
             } else {
-                alert('Invalid file type. Please upload a .obj or .glb file.');
+                alert('Invalid file type. Please upload a .obj, .glb, .fbx or .stl file.');
             }
         }
     });
@@ -30,8 +64,12 @@ export function createScene1(scene, camera, renderer, gui, fileInput) {
     // Define all settings
     const obj = {
         upload: function() { fileInput.click() },
-        autoRotate: false,
+        select: 'Select',
+        recieve: false,
+        cast: false,
+        rotate: false,
         zoom: 75,
+        rotation: 0,
         panning: 50,
         strength: 75,
         color: '#FFFFFF',
@@ -39,17 +77,37 @@ export function createScene1(scene, camera, renderer, gui, fileInput) {
 
     // Initiate the settings and put in folders (IN ORDER FROM TOP TO BOTTOM)
     gui.add(obj, 'upload').name('Upload object');
+    let selection = gui.add(obj, 'select', filesList).name('Select object');
 
-    const movement = gui.addFolder('Movement');
+    selection.onChange((selectedName) => {
+        if (loadedObjects[selectedName]) {
+            // Remove current object from the scene
+            if (currentObject) {
+                scene.remove(currentObject);
+            }
 
-    movement.add(obj, 'autoRotate').name('Auto rotate');
-    movement.add(obj, 'zoom', 0, 100).name('Zoom');
-    movement.add(obj, 'panning', 0, 100).name('Panning');
+            // Add the selected object to the scene
+            currentObject = loadedObjects[selectedName];
+            scene.add(currentObject);
+        }
+    });
 
-    const lighting = gui.addFolder('Lighting');
+    const Position = gui.addFolder('Positie en aanpassingen');
 
-    lighting.add(obj, 'strength', 0, 100).name('Strength');
-    lighting.addColor(obj, 'color').name('Color');
+    Position.add(obj, 'panning', 0, 100).name('Positie');
+    Position.add(obj, 'rotation', -100, 100).name('Rotatie')
+    Position.add(obj, 'zoom', 0, 100).name('Schaal');
+
+    const lighting = gui.addFolder('Belichting');
+
+    lighting.add(obj, 'strength', 0, 100).name('Sterkte');
+    lighting.addColor(obj, 'color').name('Kleur');
+    lighting.add(obj, 'recieve').name('Schaduwen');
+    lighting.add(obj, 'cast').name('Eigen schaduw');
+
+    const animations = gui.addFolder('Animaties');
+
+    animations.add(obj, 'rotate').name('Automatisch draaien');
 
     var inputs = document.getElementsByTagName('input');
 
@@ -62,8 +120,6 @@ export function createScene1(scene, camera, renderer, gui, fileInput) {
     }
 
     function animate() {
-        cube.rotation.x += 0.01;
-        cube.rotation.y += 0.01;
         renderer.render(scene, camera);
         requestAnimationFrame(animate);
     }
