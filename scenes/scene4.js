@@ -38,10 +38,6 @@ export function createScene4(scene, camera, renderer) {
     fileInput.type = "file";
     fileInput.accept = ".stl,.obj,.fbx,.glb,.gltf"; // Allow STL, OBJ, FBX, GLB, GLTF
     fileInput.id = "fileInput";
-    fileInput.style.position = "absolute";
-    fileInput.style.zIndex = 10;
-    fileInput.style.top = "10px";
-    fileInput.style.left = "10px";
     document.body.appendChild(fileInput);
   }
 
