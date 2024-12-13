@@ -44,7 +44,6 @@ export async function loadScene(sceneId) {
     fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.style.display = 'none';
-    fileInput.accept = '.obj,.glb'
     document.body.appendChild(fileInput);
 
     // Hide menu and show back button
@@ -53,17 +52,21 @@ export async function loadScene(sceneId) {
 
     // Dynamically import and load the scene
     switch(sceneId) {
+        case 'scene0':
+            const { createScene0 } = await import('./scenes/scene0.js');
+            createScene0(scene, camera, renderer, gui, fileInput);
+            break;
         case 'scene1':
             const { createScene1 } = await import('./scenes/scene1.js');
             createScene1(scene, camera, renderer, gui, fileInput);
             break;
         case 'scene2':
             const { createScene2 } = await import('./scenes/scene2.js');
-            createScene2(scene, camera, renderer, gui);
+            createScene2(scene, camera, renderer, gui, fileInput);
             break;
         case 'scene3':
             const { createScene3 } = await import('./scenes/scene3.js');
-            createScene3(scene, camera, renderer, gui);
+            createScene3(scene, camera, renderer, gui, fileInput);
             break;
     }
 }

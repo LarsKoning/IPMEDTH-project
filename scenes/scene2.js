@@ -1,20 +1,26 @@
-export function createScene2(scene, camera, renderer) {
-    const spheres = [];
-    for (let i = 0; i < 5; i++) {
-        const geometry = new THREE.SphereGeometry(0.3, 32, 32);
-        const material = new THREE.MeshPhongMaterial({
-            color: new THREE.Color(`hsl(${i * 72}, 100%, 50%)`)
-        });
-        const sphere = new THREE.Mesh(geometry, material);
-        sphere.position.x = (i - 2) * 1.2;
-        spheres.push(sphere);
-        scene.add(sphere);
+export function createScene2(scene, camera, renderer, gui, fileInput) {
+    fileInput.accpet = '.jpg,.jpeg,.png'
+    fileInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const fileExtension = await file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+            
+            if(['.jpg', '.jpeg', '.png'].includes(fileExtension)) {
+                console.log(`File uploaded: ${file.name}`);
+            } else {
+                alert('Invalid file type. Please upload a .jpg, .jpeg or .png')
+            }
+        }
+    })
+
+    const settings = {
+        upload: function() { fileInput.click() }
     }
 
+    gui.add(settings, 'upload').name('Upload een Panorama');
+
+
     function animate() {
-        spheres.forEach((sphere, i) => {
-            sphere.position.y = Math.sin(Date.now() * 0.001 + i) * 0.5;
-        });
         renderer.render(scene, camera);
         requestAnimationFrame(animate);
     }

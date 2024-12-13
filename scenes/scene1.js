@@ -2,6 +2,7 @@ import { FBXLoader, GLTFLoader, STLLoader } from 'three/examples/jsm/Addons.js';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 
 export function createScene1(scene, camera, renderer, gui, fileInput) {
+    // TODO: Set up correct lighting since this isn't correct (We already have function addLight in main, see if we should remove or give acces)
     const hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 2 );
     hemiLight.color.setHSL( 0.6, 1, 0.6 );
     hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
@@ -80,7 +81,7 @@ export function createScene1(scene, camera, renderer, gui, fileInput) {
     });
 
     // Define settings for GUI
-    const obj = {
+    const settings = {
         upload: function() { fileInput.click() },
         select: 'Select',
         positionX: 0,
@@ -98,8 +99,8 @@ export function createScene1(scene, camera, renderer, gui, fileInput) {
 
     // Initiate the settings and put in folders (IN ORDER FROM TOP TO BOTTOM)
     // File management
-    gui.add(obj, 'upload').name('Upload 3D object');
-    let selection = gui.add(obj, 'select', filesList).name('Select 3D object');
+    gui.add(settings, 'upload').name('Upload 3D object');
+    let selection = gui.add(settings, 'select', filesList).name('Select 3D object');
 
     // TODO: Reset gui when new model is loaded
     selection.onChange((selectedName) => {
@@ -115,28 +116,28 @@ export function createScene1(scene, camera, renderer, gui, fileInput) {
         }
     });
 
-    // Position, Rotation, and Scale
+    // Position, Rotation and Scale
     // TODO: Adding controls and see if we need rotation on the X and Z
     const position = gui.addFolder('Positie en aanpassingen');
-    position.add(obj, 'positionX', -10, 10).name('Links - Rechts').onChange(() => { if (currentObject) currentObject.position.x = obj.positionX; });
-    position.add(obj, 'positionY', -10, 10).name('Omlaag - Omhaag').onChange(() => { if (currentObject) currentObject.position.y = obj.positionY; });
-    position.add(obj, 'positionZ', -10, 10).name('Zoom').onChange(() => { if (currentObject) currentObject.position.z = obj.positionZ; });
-    // position.add(obj, 'rotationX', 0, Math.PI * 2).name('Kantelen (Voor - Achter)').onChange(() => { if (currentObject) currentObject.rotation.x = obj.rotationX; });
-    position.add(obj, 'rotationY', 0, Math.PI * 2).name('Draaien').onChange(() => { if (currentObject) currentObject.rotation.y = obj.rotationY; });
-    // position.add(obj, 'rotationZ', 0, Math.PI * 2).name('Kantelen (Links - Rechts)').onChange(() => { if (currentObject) currentObject.rotation.z = obj.rotationZ; });
+    position.add(settings, 'positionX', -10, 10).name('Links - Rechts').onChange(() => { if (currentObject) currentObject.position.x = settings.positionX; });
+    position.add(settings, 'positionY', -10, 10).name('Omlaag - Omhaag').onChange(() => { if (currentObject) currentObject.position.y = settings.positionY; });
+    position.add(settings, 'positionZ', -10, 10).name('Zoom').onChange(() => { if (currentObject) currentObject.position.z = settings.positionZ; });
+    // position.add(settings, 'rotationX', 0, Math.PI * 2).name('Kantelen (Voor - Achter)').onChange(() => { if (currentObject) currentObject.rotation.x = settings.rotationX; });
+    position.add(settings, 'rotationY', 0, Math.PI * 2).name('Draaien').onChange(() => { if (currentObject) currentObject.rotation.y = settings.rotationY; });
+    // position.add(settings, 'rotationZ', 0, Math.PI * 2).name('Kantelen (Links - Rechts)').onChange(() => { if (currentObject) currentObject.rotation.z = settings.rotationZ; });
 
 
     // Lighting and Shadows
     // TODO: Lighting isn't right yet
     const lighting = gui.addFolder('Belichting');
-    // lighting.add(obj, 'castShadow').name('Schaduw omgeving').onChange(() => { if (currentObject) {currentObject.traverse((child) => { if (child.isMesh) { child.castShadow = obj.castShadow }}) }});
-    // lighting.add(obj, 'receiveShadow').name('Schaduw object').onChange(() => { if (currentObject) {currentObject.traverse((child) => { if (child.isMesh) { child.receiveShadow = obj.receiveShadow }}) }});
-    // lighting.addColor(obj, 'color').name('Kleur licht').onChange(() => { hemiLight.color.set(obj.color); dirLight.color.set(obj.color) });
+    // lighting.add(settings, 'castShadow').name('Schaduw omgeving').onChange(() => { if (currentObject) {currentObject.traverse((child) => { if (child.isMesh) { child.castShadow = settings.castShadow }}) }});
+    // lighting.add(settings, 'receiveShadow').name('Schaduw object').onChange(() => { if (currentObject) {currentObject.traverse((child) => { if (child.isMesh) { child.receiveShadow = settings.receiveShadow }}) }});
+    // lighting.addColor(settings, 'color').name('Kleur licht').onChange(() => { hemiLight.color.set(settings.color); dirLight.color.set(settings.color) });
 
     // Animations
     const animations = gui.addFolder('Animaties');
-    animations.add(obj, 'autoRotate').name('Automatisch draaien');
-    animations.add(obj, 'rotationSpeed', 0, 0.1).name('Draai snelheid');
+    animations.add(settings, 'autoRotate').name('Automatisch draaien');
+    animations.add(settings, 'rotationSpeed', 0, 0.1).name('Draai snelheid');
 
     // TODO: Reset button, animatie van een model zelf, save states?
 
@@ -151,8 +152,8 @@ export function createScene1(scene, camera, renderer, gui, fileInput) {
     }
 
     function animate() {
-        if (obj.autoRotate && currentObject) {
-            currentObject.rotation.y += obj.rotationSpeed;
+        if (settings.autoRotate && currentObject) {
+            currentObject.rotation.y += settings.rotationSpeed;
         }
         renderer.render(scene, camera);
         requestAnimationFrame(animate);
