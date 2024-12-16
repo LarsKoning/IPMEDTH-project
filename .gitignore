@@ -11,3 +11,4 @@ dist
 dist-ssr
 coverage
 *.local
+assets

@@ -13,7 +13,7 @@
     --background-color: #F0F0F0;
     --widget-border-radius: .8rem;
     --focus-color: #FFFCF9;
-    --title-background-color: #F0F0F0;
+    --title-background-color: #f0f0f0;
 
     /* Fonts */
 
@@ -118,12 +118,12 @@
     color: #F0F0F0;
     border: .2rem solid;
     border-radius: .5rem;
-    background: #88A9EF; /* Primary color */
+    background: #0D275E; /* Primary color */
 }
 
 .lil-gui .controller.function .widget button:hover {
-    color: #88A9EF;
-    border: .2rem solid #88A9EF;
+    color: #0D275E;
+    border: .2rem solid #0D275E;
     background: none;
 }
 

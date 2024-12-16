@@ -4,7 +4,7 @@ let scene, camera, renderer, currentAnimation, gui, fileInput;
 
 export function initScene() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xD9D9D9); // Move this line up
+    scene.background = new THREE.Color(0xE6E6E6);
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -34,7 +34,6 @@ export async function loadScene(sceneId) {
         cancelAnimationFrame(currentAnimation);
     }
     addLights();
-    scene.background = new THREE.Color(0xD9D9D9);
 
     // Initiate GUI
     gui = new GUI();
@@ -52,20 +51,20 @@ export async function loadScene(sceneId) {
 
     // Dynamically import and load the scene
     switch(sceneId) {
-        case 'scene0':
-            const { createScene0 } = await import('./scenes/scene0.js');
+        case 'Fotos':
+            const { createScene0 } = await import('./scenes/Fotos.js');
             createScene0(scene, camera, renderer, gui, fileInput);
             break;
-        case 'scene1':
-            const { createScene1 } = await import('./scenes/scene1.js');
+        case 'Objects':
+            const { createScene1 } = await import('./scenes/Objects.js');
             createScene1(scene, camera, renderer, gui, fileInput);
             break;
-        case 'scene2':
-            const { createScene2 } = await import('./scenes/scene2.js');
+        case 'Panoramas':
+            const { createScene2 } = await import('./scenes/Panoramas.js');
             createScene2(scene, camera, renderer, gui, fileInput);
             break;
-        case 'scene3':
-            const { createScene3 } = await import('./scenes/scene3.js');
+        case 'Pointcloud':
+            const { createScene3 } = await import('./scenes/Pointcloud.js');
             createScene3(scene, camera, renderer, gui, fileInput);
             break;
     }

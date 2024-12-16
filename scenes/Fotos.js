@@ -1,5 +1,5 @@
 export function createScene0(scene, camera, renderer, gui, fileInput) {
-    const filesList = ['Upload an object first']; // Initial placeholder
+    const filesList = []; // Initial placeholder
 
     // Add event listener and accept for file input change
     fileInput.accept = '.jpg, .jpeg, .png, .webp'
@@ -24,11 +24,6 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
         exposure: 0,
         highlights: 0,
         shadows: 0,
-        contrast: 0,
-        sharpness: 0,
-        saturation: 0,
-        warmth: 0,
-        tint: 0,
     }
 
     // Initiate the settings and put in folders (IN ORDER FROM TOP TO BOTTOM)
@@ -40,16 +35,6 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
     editing.add(settings, 'exposure', -100, 100).name('Helderheid');
     editing.add(settings, 'highlights', -100, 100).name('Highlights');
     editing.add(settings, 'shadows', -100, 100).name('Schaduwen');
-    editing.add(settings, 'contrast', -100, 100).name('Contrast');
-    editing.add(settings, 'sharpness', -100, 100).name('Scherpte');
-
-
-    // Color settings
-    const colors = gui.addFolder('Kleur instellingen')
-    colors.add(settings, 'saturation', -100, 100).name('Kleur intensiteit');
-    colors.add(settings, 'warmth', -100, 100).name('Warmte');
-    colors.add(settings, 'tint', -100, 100).name('Tint');
-
     
 
     var inputs = document.getElementsByTagName('input');

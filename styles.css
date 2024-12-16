@@ -30,7 +30,7 @@ body {
     max-width: 100vw;
     max-height: 100vh;
 
-    background-color: #D9D9D9; /* Background color */
+    background-color: #E6E6E6; /* Background color */
 
     scroll-behavior: smooth;
 }
@@ -97,29 +97,29 @@ h3 {
     transition: all 0.3s ease;
     text-align: center;
 
-    color: #D9D9D9;
+    color: #E6E6E6;
     border: .2rem solid;
     border-radius: .5rem;
-    background: #88A9EF; /* Primary color */
+    background: #0D275E; /* Primary color */
 }
 
 #backButton {
-    color: #88A9EF;
-    border-color: #88A9EF;
+    color: #0D275E;
+    border-color: #0D275E;
     background: none;
 }
 
 /* Hover state for buttons */
 
 .menu-button:hover {
-    color: #88A9EF;
-    border: .2rem solid #88A9EF;
+    color: #0D275E;
+    border: .2rem solid #0D275E;
     background: none;
 }
 
 #backButton:hover {
-    color: #D9D9D9;
-    background: #88A9EF;
+    color: #E6E6E6;
+    background: #0D275E;
 }
 
 /* Back button specific styling */

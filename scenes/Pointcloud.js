@@ -49,16 +49,13 @@ export function createScene3(scene, camera, renderer, gui, fileInput) {
     position.add(settings, 'positionX', -10, 10).name('Links - Rechts').onChange(() => { if (mesh) mesh.position.x = settings.positionX; });
     position.add(settings, 'positionY', -10, 10).name('Omlaag - Omhaag').onChange(() => { if (mesh) mesh.position.y = settings.positionY; });
     position.add(settings, 'positionZ', -10, 10).name('Zoom').onChange(() => { if (mesh) mesh.position.z = settings.positionZ; });
-    // position.add(settings, 'rotationX', 0, Math.PI * 2).name('Kantelen (Voor - Achter)').onChange(() => { if (mesh) mesh.rotation.x = settings.rotationX; });
     position.add(settings, 'rotationY', 0, Math.PI * 2).name('Draaien').onChange(() => { if (mesh) mesh.rotation.y = settings.rotationY; });
-    // position.add(settings, 'rotationZ', 0, Math.PI * 2).name('Kantelen (Links - Rechts)').onChange(() => { if (mesh) mesh.rotation.z = settings.rotationZ; });
 
 
     // Pointcloud settings
     const pointcloud = gui.addFolder('Puntenwolk weergave en verfijning');
     pointcloud.add(settings, 'pointSize', -10, 10).name('Puntgrootte');
-    pointcloud.add(settings, 'colorType', ['RGB-kleuren', 'Hoogte-gebaseerd', 'Intensiteti-gebaseerd']).name('Kleurenmodus');
-    pointcloud.add(settings, 'density', -10, 10).name('Dichtheid');
+    // pointcloud.add(settings, 'density', -10, 10).name('Dichtheid');
 
 
     // Animate the plane vertices

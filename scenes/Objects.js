@@ -1,7 +1,10 @@
-import { FBXLoader, GLTFLoader, STLLoader } from 'three/examples/jsm/Addons.js';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { FBXLoader, GLTFLoader, OrbitControls, STLLoader, OBJLoader } from 'three/examples/jsm/Addons.js';
+import fs from 'node:fs';
+import path from 'node:path';
 
 export function createScene1(scene, camera, renderer, gui, fileInput) {
+    const controls = new OrbitControls(camera, renderer.domElement);
+
     // Map of loaders for different file formats
     const loaderMap = {
         '.obj': new OBJLoader(),
@@ -10,12 +13,10 @@ export function createScene1(scene, camera, renderer, gui, fileInput) {
         '.stl': new STLLoader(),
     };
 
-    const filesList = ['Upload an object first']; // Initial placeholder
+    const filesList = []; 
     const loadedObjects = {}; // To store loaded objects
     let currentObject = null; // Track currently displayed object
 
-    // Add event listener and accept for file input change
-    fileInput.accept = '.obj,.glb,.fbx,.stl'
     fileInput.addEventListener('change', async (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -98,18 +99,39 @@ export function createScene1(scene, camera, renderer, gui, fileInput) {
             // Add the selected object to the scene
             currentObject = loadedObjects[selectedName];
             scene.add(currentObject);
+
+            const box = new THREE.Box3();
+            currentObject.traverse((child) => {
+                if (child.isMesh) {
+                    box.expandByObject(child);
+                }
+            });
+
+            if (!box.isEmpty()) {
+                const size = new THREE.Vector3();
+                const center = new THREE.Vector3();
+
+                box.getSize(size);
+                box.getCenter(center)
+
+                const maxDimension = Math.max(size.x, size.y, size.z);
+                const desiredSize = 2;
+                const scaleFactor = desiredSize / maxDimension;
+
+                currentObject.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+                currentObject.position.x = 0;
+                currentObject.position.y = 0.5;
+            }
         }
     });
 
     // Position, Rotation and Scale
-    // TODO: Adding controls and see if we need rotation on the X and Z
     const position = gui.addFolder('Positie en aanpassingen');
     position.add(settings, 'positionX', -10, 10).name('Links - Rechts').onChange(() => { if (currentObject) currentObject.position.x = settings.positionX; });
     position.add(settings, 'positionY', -10, 10).name('Omlaag - Omhaag').onChange(() => { if (currentObject) currentObject.position.y = settings.positionY; });
     position.add(settings, 'positionZ', -10, 10).name('Zoom').onChange(() => { if (currentObject) currentObject.position.z = settings.positionZ; });
-    // position.add(settings, 'rotationX', 0, Math.PI * 2).name('Kantelen (Voor - Achter)').onChange(() => { if (currentObject) currentObject.rotation.x = settings.rotationX; });
     position.add(settings, 'rotationY', 0, Math.PI * 2).name('Draaien').onChange(() => { if (currentObject) currentObject.rotation.y = settings.rotationY; });
-    // position.add(settings, 'rotationZ', 0, Math.PI * 2).name('Kantelen (Links - Rechts)').onChange(() => { if (currentObject) currentObject.rotation.z = settings.rotationZ; });
 
 
     // Lighting and Shadows
@@ -124,7 +146,7 @@ export function createScene1(scene, camera, renderer, gui, fileInput) {
     animations.add(settings, 'autoRotate').name('Automatisch draaien');
     animations.add(settings, 'rotationSpeed', 0, 0.1).name('Draai snelheid');
 
-    // TODO: Reset button, animatie van een model zelf, save states?
+    // TODO: Reset button, save states bij switchen?
 
     var inputs = document.getElementsByTagName('input');
 

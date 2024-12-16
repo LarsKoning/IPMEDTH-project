@@ -16,13 +16,16 @@
 <body>
     <section class="overlay">
         <section id="menu">
-            <h1>Welkom! Kies een Omgeving waarin u wilt werken.</h1>
-
+            <section>
+                <h1>Welkom bij casus: Apeldoorn huisje.</h1>
+                <h2>Kies een omgeving waarin u wilt werken.</h2>
+            </section>
+            
             <section class="options">
-                <button class="menu-button" onclick="loadScene('scene0')">Foto's</button>
-                <button class="menu-button" onclick="loadScene('scene1')">3D objecten</button>
-                <button class="menu-button" onclick="loadScene('scene2')">Panorama's</button>
-                <button class="menu-button" onclick="loadScene('scene3')">Puntenwolken</button>
+                <button class="menu-button" onclick="loadScene('Fotos')">Foto's</button>
+                <button class="menu-button" onclick="loadScene('Objects')">3D objecten</button>
+                <button class="menu-button" onclick="loadScene('Panoramas')">Panorama's</button>
+                <button class="menu-button" onclick="loadScene('Pointcloud')">Puntenwolken</button>
             </section>
         </section>
         <button id="backButton" class="menu-button" onclick="showMenu()">Back to Menu</button>
