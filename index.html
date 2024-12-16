@@ -1,48 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ETVR inspector</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="lilGUI.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
-</head>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="lilGUI.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
 
-<body>
+  <body>
     <section class="overlay">
-        <section id="menu">
-            <section>
-                <h1>Welkom bij casus: Apeldoorn huisje.</h1>
-                <h2>Kies een omgeving waarin u wilt werken.</h2>
-            </section>
-            
-            <section class="options">
-                <button class="menu-button" onclick="loadScene('Fotos')">Foto's</button>
-                <button class="menu-button" onclick="loadScene('Objects')">3D objecten</button>
-                <button class="menu-button" onclick="loadScene('Panoramas')">Panorama's</button>
-                <button class="menu-button" onclick="loadScene('Pointcloud')">Puntenwolken</button>
-            </section>
+      <section id="menu">
+        <section>
+          <h1>Welkom bij casus: Apeldoorn huisje.</h1>
+          <h2>Kies een omgeving waarin u wilt werken.</h2>
         </section>
-        <button id="backButton" class="menu-button" onclick="showMenu()">Back to Menu</button>
 
-        <script type="module">
-            import { showMenu, loadScene, initScene } from './main.js';
-            
-            window.onload = (event) => {
-                initScene();
-            };
+        <section class="options">
+          <button class="menu-button" onclick="loadScene('Fotos')">
+            Foto's
+          </button>
+          <button class="menu-button" onclick="loadScene('Objects')">
+            3D objecten
+          </button>
+          <button class="menu-button" onclick="loadScene('Panoramas')">
+            Panorama's
+          </button>
+          <button class="menu-button" onclick="loadScene('Pointcloud')">
+            Puntenwolken
+          </button>
+        </section>
+      </section>
+      <button id="backButton" class="menu-button" onclick="showMenu()">
+        Back to Menu
+      </button>
 
-            window.showMenu = showMenu;
-            window.loadScene = loadScene;
-            
-            
-        </script>
+      <script type="module">
+        import { showMenu, loadScene, initScene } from "./main.js";
+
+        window.onload = (event) => {
+          initScene();
+        };
+
+        window.showMenu = showMenu;
+        window.loadScene = loadScene;
+      </script>
     </section>
-</body>
-
+  </body>
 </html>
