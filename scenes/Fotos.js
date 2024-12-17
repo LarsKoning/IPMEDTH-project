@@ -9,45 +9,42 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
     updateMediaViewer();
   }
 
-  // Toon de foto's in de mediaviewer-folder
   function updateMediaViewer() {
-    // Verwijder bestaande controllers binnen de mediaViewerFolder
-    if (mediaViewerFolder.__controllers) {
-      mediaViewerFolder.__controllers.forEach((controller) => {
-        mediaViewerFolder.remove(controller);
-      });
+    // Controleer of de folder al bestaat; maak deze indien nodig
+    if (!mediaViewerFolder) {
+      mediaViewerFolder = gui.addFolder("Photo's");
     }
 
-    filesList.forEach((file, index) => {
-      // Maak een custom controller voor elke afbeelding
-      const folder = mediaViewerFolder.addFolder(`Foto ${index + 1}`);
+    const index = filesList.length - 1;
 
-      // Voeg een custom DOM-element toe met de afbeelding
+    const propertyName = `Foto ${index}`;
+
+    // Voeg de afbeelding toe aan de GUI
+    const elementController = mediaViewerFolder.add(
+      { [propertyName]: () => selectImage(index) },
+      propertyName,
+      console.log(filesList),
+      console.log(index)
+    );
+
+    // Voeg nieuwe items toe uit filesList
+    filesList.forEach((file) => {
+      elementController.name(file.name);
+      // Voeg een thumbnail toe
       const thumbnail = document.createElement("img");
       thumbnail.src = file.url;
-      thumbnail.style.width = "100px";
-      thumbnail.style.height = "auto";
-      thumbnail.style.cursor = "pointer";
-      thumbnail.style.border = "2px solid transparent";
-
-      // Voeg de afbeelding toe aan de GUI
-      const elementController = folder.add(
-        { click: () => selectImage(index) },
-        "click"
-      );
-      elementController.name(file.name);
-      elementController.domElement.style.backgroundImage = `url(${file.url})`;
-      elementController.domElement.style.backgroundSize = "cover";
-      elementController.domElement.style.width = "100px";
-      elementController.domElement.style.height = "100px";
-      elementController.domElement.style.padding = "0";
-      elementController.domElement.style.border = "2px solid transparent";
 
       // Event listener voor het selecteren van een afbeelding
       thumbnail.addEventListener("click", () => {
         selectImage(index);
         highlightThumbnail(thumbnail);
       });
+
+      // Voeg visuele thumbnail toe aan het element in de GUI
+      const domElement = elementController.domElement;
+      domElement.style.backgroundImage = `url(${file.url})`;
+
+      // console.log(filesList);
     });
   }
 
