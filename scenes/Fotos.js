@@ -116,6 +116,53 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
   // Mediaviewer-folder
   const mediaViewerFolder = gui.addFolder("Photo's");
 
+  // Functie om de geselecteerde afbeelding weer te geven in de Three.js-scène met de originele grootte
+  function displayImageInScene(fileURL) {
+    // Verwijder de vorige afbeelding als deze bestaat
+    if (currentImage) {
+      scene.remove(currentImage); // Verwijder het vorige object
+    }
+
+    // Maak een nieuw Image object om de originele afmetingen van de afbeelding te verkrijgen
+    const img = new Image();
+    img.onload = () => {
+      // Verkrijg de originele breedte en hoogte van de afbeelding
+      const width = img.width;
+      const height = img.height;
+
+      // Laad de afbeelding als een texture
+      const textureLoader = new THREE.TextureLoader();
+      textureLoader.load(fileURL, (texture) => {
+        // Maak een materiaal van de texture
+        const material = new THREE.MeshBasicMaterial({
+          map: texture, // Zet de texture als de map voor het materiaal
+          side: THREE.DoubleSide, // Zorg ervoor dat beide zijden van het vlak zichtbaar zijn
+        });
+
+        // Maak een vlak (plane geometry) met de originele breedte en hoogte
+        const geometry = new THREE.PlaneGeometry(width / 100, height / 100); // Schaal de afmetingen naar een geschikte grootte voor de scène
+
+        // Maak een mesh (3D object) met de vlak en het materiaal
+        currentImage = new THREE.Mesh(geometry, material);
+
+        // Zet de positie van het vlak in de scène
+        currentImage.position.set(0, 0, -5); // Plaats het vlak op een bepaalde diepte
+
+        // Voeg de afbeelding toe aan de scène
+        scene.add(currentImage);
+      });
+    };
+    img.src = fileURL; // Laad de afbeelding
+  }
+
+  function selectImage(index) {
+    const file = filesList[index];
+    console.log(`Geselecteerde foto: ${file.name}`);
+
+    // Toon de afbeelding in de 3D-scène
+    displayImageInScene(file.url);
+  }
+
   // Animate functie
   function animate() {
     renderer.render(scene, camera);
