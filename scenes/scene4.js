@@ -94,7 +94,7 @@ export function createScene4(scene, camera, renderer) {
     return object;
   }
 
-  function handleSTL(file) {
+  function loadSTL(file) {
     const stlLoader = new STLLoader();
     const reader = new FileReader();
     reader.onload = function (e) {
