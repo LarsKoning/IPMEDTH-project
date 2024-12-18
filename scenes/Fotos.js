@@ -127,8 +127,8 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
     const img = new Image();
     img.onload = () => {
       // Verkrijg de originele breedte en hoogte van de afbeelding
-      const width = img.width;
-      const height = img.height;
+      const width = img.width / 2;
+      const height = img.height / 2;
 
       // Laad de afbeelding als een texture
       const textureLoader = new THREE.TextureLoader();
