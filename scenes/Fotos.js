@@ -16,6 +16,8 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
     // Controleer of de folder al bestaat; maak deze indien nodig
     if (!mediaViewerFolder) {
       mediaViewerFolder = gui.addFolder("Photo's");
+      const folderElement = mediaViewerFolder.domElement;
+      folderElement.id = "photosFolder";
     }
 
     const index = filesList.length - 1;
@@ -67,11 +69,11 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
 
     if (!currentImage) {
       currentImage = document.createElement("img");
-      currentImage.style.position = "absolute";
-      currentImage.style.top = "10px";
-      currentImage.style.right = "10px";
-      currentImage.style.width = "300px";
-      currentImage.style.border = "2px solid #fff";
+      // currentImage.style.position = "absolute";
+      // currentImage.style.top = "10px";
+      // currentImage.style.right = "10px";
+      // currentImage.style.width = "300px";
+      // currentImage.style.border = "2px solid #fff";
       document.body.appendChild(currentImage);
     }
 
@@ -195,6 +197,8 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
 
   // Mediaviewer-folder
   const mediaViewerFolder = gui.addFolder("Photo's");
+  const folderElement = mediaViewerFolder.domElement;
+  folderElement.id = "photosFolder";
 
   function displayImageInScene(fileURL) {
     // Reset de canvas en verwijder oude objecten
