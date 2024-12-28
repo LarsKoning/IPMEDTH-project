@@ -196,7 +196,7 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
     .onChange(applyAdjustments);
 
   // Mediaviewer-folder
-  const mediaViewerFolder = gui.addFolder("Photo's");
+  var mediaViewerFolder = gui.addFolder("Galerij");
   const folderElement = mediaViewerFolder.domElement;
   folderElement.id = "photosFolder";
 
