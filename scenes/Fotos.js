@@ -1,6 +1,9 @@
 export function createScene0(scene, camera, renderer, gui, fileInput) {
-  const filesList = []; // Lijst van geüploade bestanden
-  let currentImage = null; // Huidig geselecteerde afbeelding
+  const filesList = [];
+  let currentImage = null;
+  let currentCanvas = document.createElement("canvas");
+  let currentContext = currentCanvas.getContext("2d");
+  let currentFile = null;
 
   // Voeg een bestand toe aan de lijst en toon het in de mediaviewer
   async function addFile(file) {
@@ -13,6 +16,8 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
     // Controleer of de folder al bestaat; maak deze indien nodig
     if (!mediaViewerFolder) {
       mediaViewerFolder = gui.addFolder("Photo's");
+      const folderElement = mediaViewerFolder.domElement;
+      folderElement.id = "photosFolder";
     }
 
     const index = filesList.length - 1;
@@ -64,11 +69,11 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
 
     if (!currentImage) {
       currentImage = document.createElement("img");
-      currentImage.style.position = "absolute";
-      currentImage.style.top = "10px";
-      currentImage.style.right = "10px";
-      currentImage.style.width = "300px";
-      currentImage.style.border = "2px solid #fff";
+      // currentImage.style.position = "absolute";
+      // currentImage.style.top = "10px";
+      // currentImage.style.right = "10px";
+      // currentImage.style.width = "300px";
+      // currentImage.style.border = "2px solid #fff";
       document.body.appendChild(currentImage);
     }
 
@@ -109,57 +114,151 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
 
   // Bewerkingsopties-folder
   const editing = gui.addFolder("Bewerkings opties");
-  editing.add(settings, "exposure", -100, 100).name("Helderheid");
-  editing.add(settings, "highlights", -100, 100).name("Highlights");
-  editing.add(settings, "shadows", -100, 100).name("Schaduwen");
+
+  // Hulpfunctie om de afbeelding aan te passen
+  function applyAdjustments() {
+    if (!currentFile || !currentContext) return;
+
+    const img = new Image();
+    img.onload = () => {
+      // Reset het canvas en teken de originele afbeelding
+      currentCanvas.width = img.width;
+      currentCanvas.height = img.height;
+      currentContext.drawImage(img, 0, 0);
+
+      const imgData = currentContext.getImageData(
+        0,
+        0,
+        currentCanvas.width,
+        currentCanvas.height
+      );
+      const data = imgData.data;
+
+      // Pas helderheid, highlights en schaduwen toe
+      const exposureFactor = Math.pow(2, settings.exposure / 100);
+      const highlightsFactor = settings.highlights / 100;
+      const shadowsFactor = settings.shadows / 100;
+
+      for (let i = 0; i < data.length; i += 4) {
+        // Pas de helderheid, highlights en schaduwen toe
+        data[i] = adjustPixel(
+          data[i],
+          exposureFactor,
+          highlightsFactor,
+          shadowsFactor
+        ); // Rood
+        data[i + 1] = adjustPixel(
+          data[i + 1],
+          exposureFactor,
+          highlightsFactor,
+          shadowsFactor
+        ); // Groen
+        data[i + 2] = adjustPixel(
+          data[i + 2],
+          exposureFactor,
+          highlightsFactor,
+          shadowsFactor
+        ); // Blauw
+      }
+
+      currentContext.putImageData(imgData, 0, 0);
+
+      // Update de afbeelding in de Three.js-scène
+      displayImageInScene(currentCanvas.toDataURL());
+    };
+
+    img.src = currentFile.url; // Gebruik de originele afbeelding
+  }
+
+  // Hulpfunctie om een pixelwaarde aan te passen
+  function adjustPixel(value, exposure, highlights, shadows) {
+    let newValue = value * exposure; // Pas helderheid toe
+    if (newValue > 128) {
+      newValue += highlights * (255 - newValue); // Highlights
+    } else {
+      newValue += shadows * newValue; // Shadows
+    }
+    return Math.min(Math.max(newValue, 0), 255); // Houd de waarde binnen het bereik 0-255
+  }
+
+  // Voeg eventlisteners toe aan de sliders
+  editing
+    .add(settings, "exposure", -100, 100)
+    .name("Helderheid")
+    .onChange(applyAdjustments);
+  editing
+    .add(settings, "highlights", -100, 100)
+    .name("Highlights")
+    .onChange(applyAdjustments);
+  editing
+    .add(settings, "shadows", -100, 100)
+    .name("Schaduwen")
+    .onChange(applyAdjustments);
 
   // Mediaviewer-folder
-  const mediaViewerFolder = gui.addFolder("Photo's");
+  var mediaViewerFolder = gui.addFolder("Galerij");
+  const folderElement = mediaViewerFolder.domElement;
+  folderElement.id = "photosFolder";
 
-  // Functie om de geselecteerde afbeelding weer te geven in de Three.js-scène met de originele grootte
   function displayImageInScene(fileURL) {
-    // Verwijder de vorige afbeelding als deze bestaat
-    if (currentImage) {
-      scene.remove(currentImage); // Verwijder het vorige object
-    }
+    // Reset de canvas en verwijder oude objecten
+    resetCanvas();
 
     // Maak een nieuw Image object om de originele afmetingen van de afbeelding te verkrijgen
     const img = new Image();
     img.onload = () => {
-      // Verkrijg de originele breedte en hoogte van de afbeelding
-      const width = img.width;
-      const height = img.height;
+      const width = img.width / 2;
+      const height = img.height / 2;
 
-      // Laad de afbeelding als een texture
       const textureLoader = new THREE.TextureLoader();
-      textureLoader.load(fileURL, (texture) => {
-        // Maak een materiaal van de texture
-        const material = new THREE.MeshBasicMaterial({
-          map: texture, // Zet de texture als de map voor het materiaal
-          side: THREE.DoubleSide, // Zorg ervoor dat beide zijden van het vlak zichtbaar zijn
-        });
+      textureLoader.load(
+        fileURL,
+        (texture) => {
+          const material = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+          });
 
-        // Maak een vlak (plane geometry) met de originele breedte en hoogte
-        const geometry = new THREE.PlaneGeometry(width / 100, height / 100); // Schaal de afmetingen naar een geschikte grootte voor de scène
+          const geometry = new THREE.PlaneGeometry(width / 100, height / 100);
 
-        // Maak een mesh (3D object) met de vlak en het materiaal
-        currentImage = new THREE.Mesh(geometry, material);
+          currentImage = new THREE.Mesh(geometry, material);
 
-        // Zet de positie van het vlak in de scène
-        currentImage.position.set(0, 0, -5); // Plaats het vlak op een bepaalde diepte
+          currentImage.position.set(0, 0, -5);
 
-        // Voeg de afbeelding toe aan de scène
-        scene.add(currentImage);
-      });
+          scene.add(currentImage);
+        },
+        undefined,
+        (err) => console.error("Texture loading error:", err)
+      );
     };
-    img.src = fileURL; // Laad de afbeelding
+
+    img.src = fileURL; // Start het laden van de afbeelding
+  }
+
+  function resetCanvas() {
+    // Verwijder alle kinderen van de scene
+    while (scene.children.length > 0) {
+      const object = scene.children[0];
+      if (object.geometry) object.geometry.dispose();
+      if (object.material) {
+        if (object.material.map) object.material.map.dispose();
+        object.material.dispose();
+      }
+      scene.remove(object);
+    }
+
+    // Reset currentImage
+    currentImage = null;
   }
 
   function selectImage(index) {
     const file = filesList[index];
     console.log(`Geselecteerde foto: ${file.name}`);
 
-    // Toon de afbeelding in de 3D-scène
+    currentFile = file; // Update currentFile
+    applyAdjustments(); // Pas de instellingen toe op de geselecteerde afbeelding
+
+    // Reset canvas en toon de afbeelding in de 3D-scène
     displayImageInScene(file.url);
   }
 
