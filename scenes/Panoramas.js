@@ -1,7 +1,6 @@
 export function createScene2(scene, camera, renderer, gui, fileInput) {
   const filesList = [];
   let currentFile = null;
-  let sphereMesh = null;
 
   // Voeg een bestand toe aan de lijst en toon het in de mediaviewer
   async function addFile(file) {
@@ -57,8 +56,8 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
     const file = filesList[index];
     currentFile = file;
 
-    // Direct proberen om als panorama te laden
-    displayPanoramaInScene(file.url);
+    // Toon de skybox in de scene
+    displaySkyboxInScene(file.url);
   }
 
   // Bestand uploaden via de fileInput
@@ -93,40 +92,36 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
   const folderElement = mediaViewerFolder.domElement;
   folderElement.id = "mediaFolder";
 
-  function displayPanoramaInScene(fileURL) {
+  function displaySkyboxInScene(fileURL) {
     resetScene();
 
-    const loader = new THREE.ImageLoader();
+    const loader = new THREE.TextureLoader();
     const loadingIndicator = createLoadingIndicator();
 
     loader.load(
       fileURL,
-      (image) => {
+      (texture) => {
         removeLoadingIndicator(loadingIndicator);
 
-        // Valideer of het bestand een panorama is
-        if (!validatePanorama(image)) return;
+        // Controleer of de afbeelding een panorama is
+        if (!validatePanorama(texture.image)) return;
 
-        // Maak een texture van de geladen afbeelding
-        const texture = new THREE.Texture();
-        texture.image = image;
-        texture.needsUpdate = true;
+        // Stel de skybox in
+        const skyboxMaterial = new THREE.MeshBasicMaterial({
+          map: texture,
+          side: THREE.BackSide,
+        });
+        const skyboxGeometry = new THREE.BoxGeometry(1000, 1000, 1000); // Maak een grote kubus
+        const skybox = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
 
-        // Maak een bolvorm voor het panorama
-        const sphereGeometry = new THREE.SphereGeometry(500, 32, 32); // Verminder segmenten voor performance
-        sphereGeometry.scale(-1, 1, 1);
-
-        const sphereMaterial = new THREE.MeshBasicMaterial({ map: texture });
-        sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
-
-        scene.add(sphereMesh);
-        console.log("Panorama succesvol geladen.");
+        scene.add(skybox);
+        console.log("Skybox succesvol geladen.");
       },
       undefined,
       (error) => {
         removeLoadingIndicator(loadingIndicator);
-        console.error("Error loading panorama image:", error);
-        alert("Het panorama kon niet worden geladen. Controleer het bestand.");
+        console.error("Error loading skybox image:", error);
+        alert("De skybox kon niet worden geladen. Controleer het bestand.");
       }
     );
   }
@@ -151,13 +146,11 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
       }
       scene.remove(object);
     }
-
-    sphereMesh = null;
   }
 
   function createLoadingIndicator() {
     const loadingIndicator = document.createElement("div");
-    loadingIndicator.textContent = "Loading panorama...";
+    loadingIndicator.textContent = "Loading skybox...";
     loadingIndicator.style.position = "absolute";
     loadingIndicator.style.top = "50%";
     loadingIndicator.style.left = "50%";
@@ -174,8 +167,12 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
     document.body.removeChild(indicator);
   }
 
+  // Camera beweging beperken
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
+  controls.enableZoom = false; // Geen zoom
+  controls.enablePan = false; // Geen pan
+  controls.maxPolarAngle = Math.PI; // Geen ondersteboven kijken
   controls.update();
 
   function animate() {
