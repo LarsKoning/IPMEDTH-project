@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "three": "^0.169.0",
+    "three-mesh-ui": "^6.5.4",
     "vite": "^5.4.10"
   },
   "devDependencies": {
