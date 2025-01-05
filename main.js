@@ -200,7 +200,7 @@ function createBackButton() {
     intersectionObjects.push(backButtonBlock);
 
     // Position it at the top-left corner relative to the camera
-    backButtonBlock.position.set(-6.45, 2.45, -1.5);
+    backButtonBlock.position.set(0, 0, -1.5);
 }
 
 function onMouseClick(event) {
