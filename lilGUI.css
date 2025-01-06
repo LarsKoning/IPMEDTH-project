@@ -143,8 +143,18 @@ input {
 }
 
 .lil-gui #photosFolder {
-  max-height: 30rem;
+  max-height: 40rem;
   overflow-y: auto;
+}
+
+.lil-gui #photosFolder .title {
+  position: sticky;
+  top: 0;
+  background-color: #f0f0f0;
+  width: 100%;
+  margin: 0;
+  padding: 0 25px;
+  z-index: 2;
 }
 
 .lil-gui #photosFolder::-webkit-scrollbar {
@@ -167,27 +177,9 @@ input {
 }
 
 .lil-gui #photosFolder .controller.function .widget button {
-  font-weight: 700;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
   width: fit-content;
   min-width: 20%;
   max-width: 45%;
-  margin: 2.5rem;
-  margin-right: 1rem;
-  padding: 2.5rem 0.5rem;
-
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-align: center;
-
-  color: #f0f0f0;
-  border: 0.2rem solid;
-  border-radius: 0.5rem;
-  background: #0d275e; /* Primary color */
 }
 
 .lil-gui #photosFolder .controller.function .widget button:hover {
