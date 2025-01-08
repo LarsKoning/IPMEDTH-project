@@ -15,6 +15,8 @@ export function initScene() {
     addLights();
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enabled = false;
+    controls.enableDamping = true;
+
 
 
     
@@ -67,7 +69,7 @@ export async function loadScene(sceneId) {
             break;
         case 'Panoramas':
             const { createScene2 } = await import('./scenes/Panoramas.js');
-            createScene2(scene, camera, renderer, gui, fileInput);
+            createScene2(scene, camera, renderer, gui, fileInput, controls);
             break;
         case 'Pointcloud':
             const { createScene3 } = await import('./scenes/Pointcloud.js');

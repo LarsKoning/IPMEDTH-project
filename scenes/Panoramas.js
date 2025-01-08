@@ -1,4 +1,6 @@
-export function createScene2(scene, camera, renderer, gui, fileInput) {
+export function createScene2(scene, camera, renderer, gui, fileInput, controls) {
+  controls.enable = true;
+
   const filesList = [];
   let currentFile = null;
   let sphereMesh = null;
@@ -173,10 +175,6 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
   function removeLoadingIndicator(indicator) {
     document.body.removeChild(indicator);
   }
-
-  const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.update();
 
   function animate() {
     controls.update();
