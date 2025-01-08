@@ -74,7 +74,7 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
         await addFile(file);
       } else {
         alert(
-          "Invalid file type. Please upload a .jpg, .jpeg, .png, or .webp file."
+          "Ongeldig bestandstype. Upload een bestand in het formaat .jpg, .jpeg, .png of .webp."
         );
       }
     }
@@ -126,7 +126,7 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
       (error) => {
         removeLoadingIndicator(loadingIndicator);
         console.error("Error loading panorama image:", error);
-        alert("Het panorama kon niet worden geladen. Controleer het bestand.");
+        alert("De panorama kon niet worden geladen. Controleer het bestand of contacteer de beheerder.");
       }
     );
   }
@@ -134,7 +134,7 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
   function validatePanorama(image) {
     if (image.width / image.height !== 2) {
       alert(
-        "Dit bestand lijkt geen geldig panorama te zijn. Breedte/hoogte verhouding moet 2:1 zijn."
+        "Dit bestand lijkt geen geldig panorama te zijn, ga naar de Foto's omgeving."
       );
       return false;
     }

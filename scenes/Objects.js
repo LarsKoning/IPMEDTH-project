@@ -63,14 +63,14 @@ export function createScene1(scene, camera, renderer, gui, fileInput, controls) 
 
           filesList.push(file.name);
           selection.options(filesList);
-          alert(`Successfully loaded: ${file.name}`);
+          alert(`Bestand succesvol geladen: ${file.name}`);
         } catch (error) {
-          alert(`Error loading file: ${file.name}`);
+          alert(`Fout bij het laden van bestand: ${file.name}`);
           console.error(error);
         }
       } else {
         alert(
-          "Invalid file type. Please upload a .obj, .glb, .fbx or .stl file."
+          "Ongeldig bestandstype. Upload een bestand in het formaat .obj, .glb, .fbx of .stl."
         );
       }
     }
