@@ -85,6 +85,8 @@ export function showMenu() {
         scene.remove(scene.children[0]); 
         gui.destroy();
         fileInput.remove();
+
+        controls.reset();
         controls.enabled = false;
     }
 
