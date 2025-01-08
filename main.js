@@ -1,6 +1,8 @@
 import GUI from 'lil-gui';
+import { OrbitControls } from "three/examples/jsm/Addons.js";
 
-let scene, camera, renderer, currentAnimation, gui, fileInput;
+
+let scene, camera, renderer, currentAnimation, gui, fileInput, controls;
 
 export function initScene() {
     scene = new THREE.Scene();
@@ -11,6 +13,10 @@ export function initScene() {
     document.body.appendChild(renderer.domElement);
     camera.position.z = 5;
     addLights();
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enabled = false;
+
+
     
     // Render the initial scene with the light gray background
     renderer.render(scene, camera);
@@ -57,7 +63,7 @@ export async function loadScene(sceneId) {
             break;
         case 'Objects':
             const { createScene1 } = await import('./scenes/Objects.js');
-            createScene1(scene, camera, renderer, gui, fileInput);
+            createScene1(scene, camera, renderer, gui, fileInput, controls);
             break;
         case 'Panoramas':
             const { createScene2 } = await import('./scenes/Panoramas.js');
@@ -79,6 +85,7 @@ export function showMenu() {
         scene.remove(scene.children[0]); 
         gui.destroy();
         fileInput.remove();
+        controls.enabled = false;
     }
 
     document.getElementById('menu').style.display = 'flex';
