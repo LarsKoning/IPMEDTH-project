@@ -20,7 +20,7 @@ export function createScene1(scene, camera, renderer, gui, fileInput, controls) 
   const loadedObjects = {}; // To store loaded objects
   let currentObject = null; // Track currently displayed object
 
-    fileInput.accept = '.obj, .glb, . fbx, .stl'
+    fileInput.accept = '.obj, .glb, .fbx, .stl'
     fileInput.addEventListener('change', async (event) => {
         const file = event.target.files[0];
         if (file) {
