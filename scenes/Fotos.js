@@ -198,7 +198,8 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
   // Mediaviewer-folder
   var mediaViewerFolder = gui.addFolder("Galerij");
   const folderElement = mediaViewerFolder.domElement;
-  folderElement.id = "photosFolder";
+
+  folderElement.classList.add("photosFolder");
 
   function displayImageInScene(fileURL) {
     // Reset de canvas en verwijder oude objecten
