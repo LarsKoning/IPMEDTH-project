@@ -142,31 +142,42 @@ input {
   margin: 1rem;
 }
 
-.lil-gui #photosFolder {
+.lil-gui .photosFolder {
   max-height: 30rem;
   overflow-y: auto;
 }
 
-.lil-gui #photosFolder::-webkit-scrollbar {
+.lil-gui .photosFolder .title {
+  position: sticky;
+  top: 0;
+  background-color: #f0f0f0;
+  width: 100%;
+  margin: 0;
+  padding: 0 25px;
+  z-index: 2;
+}
+
+
+.lil-gui .photosFolder::-webkit-scrollbar {
   width: 8px;
 }
 
-.lil-gui #photosFolder::-webkit-scrollbar-thumb {
+.lil-gui .photosFolder::-webkit-scrollbar-thumb {
   background-color: #888;
   border-radius: 4px;
 }
 
-.lil-gui #photosFolder::-webkit-scrollbar-thumb:hover {
+.lil-gui .photosFolder::-webkit-scrollbar-thumb:hover {
   background-color: #555;
 }
 
-.lil-gui #photosFolder .controller .widget {
+.lil-gui .photosFolder .controller .widget {
   display: flex;
   align-items: center;
   justify-content: right;
 }
 
-.lil-gui #photosFolder .controller.function .widget button {
+.lil-gui .photosFolder .controller.function .widget button {
   font-weight: 700;
 
   display: flex;
@@ -190,7 +201,7 @@ input {
   background: #0d275e; /* Primary color */
 }
 
-.lil-gui #photosFolder .controller.function .widget button:hover {
+.lil-gui .photosFolder .controller.function .widget button:hover {
   color: #0d275e;
   border: 0.2rem solid #0d275e;
   background: none;
