@@ -13,46 +13,39 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
   const API_KEY = "AIzaSyBSRS_xgFTJ7g2g26ilFw1jgmzhpCYA1M4";
   const PAN_FOLDER_ID = "1tG8uMunbeUYeRWwIv8hQAst7MiOk1mvx";
 
-  // Voeg een bestand toe aan de lijst en toon het in de mediaviewer
-  // async function addFile(file) {
-  //   const fileURL = URL.createObjectURL(file);
-  //   filesList.push({ name: file.name, url: fileURL });
-  //   updateMediaViewer();
+  // function updateMediaViewer() {
+  //   if (!mediaViewerFolder) {
+  //     mediaViewerFolder = gui.addFolder("Media");
+  //     const folderElement = mediaViewerFolder.domElement;
+  //     folderElement.classList.add("photosFolder");
+  //     folderElement.id = "photosFolder";
+  //   }
+
+  //   const index = filesList.length - 1;
+  //   const propertyName = `Bestand ${index}`;
+
+  //   // Voeg het bestand toe aan de GUI
+  //   const elementController = mediaViewerFolder.add(
+  //     { [propertyName]: () => selectFile(index) },
+  //     propertyName
+  //   );
+
+  //   filesList.forEach((file) => {
+  //     elementController.name(file.name);
+
+  //     // Voeg een thumbnail toe
+  //     const thumbnail = document.createElement("img");
+  //     thumbnail.src = file.url;
+
+  //     thumbnail.addEventListener("click", () => {
+  //       selectFile(index);
+  //       highlightThumbnail(thumbnail);
+  //     });
+
+  //     const domElement = elementController.domElement;
+  //     domElement.style.backgroundImage = `url(${file.url})`;
+  //   });
   // }
-
-  function updateMediaViewer() {
-    if (!mediaViewerFolder) {
-      mediaViewerFolder = gui.addFolder("Media");
-      const folderElement = mediaViewerFolder.domElement;
-      folderElement.classList.add("photosFolder");
-      folderElement.id = "photosFolder";
-    }
-
-    const index = filesList.length - 1;
-    const propertyName = `Bestand ${index}`;
-
-    // Voeg het bestand toe aan de GUI
-    const elementController = mediaViewerFolder.add(
-      { [propertyName]: () => selectFile(index) },
-      propertyName
-    );
-
-    filesList.forEach((file) => {
-      elementController.name(file.name);
-
-      // Voeg een thumbnail toe
-      const thumbnail = document.createElement("img");
-      thumbnail.src = file.url;
-
-      thumbnail.addEventListener("click", () => {
-        selectFile(index);
-        highlightThumbnail(thumbnail);
-      });
-
-      const domElement = elementController.domElement;
-      domElement.style.backgroundImage = `url(${file.url})`;
-    });
-  }
 
   // Highlight geselecteerde thumbnail
   function highlightThumbnail(selectedThumbnail) {
