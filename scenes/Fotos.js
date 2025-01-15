@@ -93,7 +93,7 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
         await addFile(file);
       } else {
         alert(
-          "Invalid file type. Please upload a .jpg, .jpeg, .png or .webp file."
+          "Ongeldig bestandstype. Upload een bestand in het formaat .jpg, .jpeg, .png of .webp."
         );
       }
     }

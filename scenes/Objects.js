@@ -1,15 +1,12 @@
 import {
   FBXLoader,
   GLTFLoader,
-  OrbitControls,
   STLLoader,
   OBJLoader,
 } from "three/examples/jsm/Addons.js";
-import fs from "node:fs";
-import path from "node:path";
 
-export function createScene1(scene, camera, renderer, gui, fileInput) {
-  const controls = new OrbitControls(camera, renderer.domElement);
+export function createScene1(scene, camera, renderer, gui, fileInput, controls) {
+  controls.enabled = true;
 
   // Map of loaders for different file formats
   const loaderMap = {
@@ -23,14 +20,16 @@ export function createScene1(scene, camera, renderer, gui, fileInput) {
   const loadedObjects = {}; // To store loaded objects
   let currentObject = null; // Track currently displayed object
 
-  fileInput.accept = ".obj, .glb, .fbx, .stl";
-  fileInput.addEventListener("change", async (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      // Validate the file type
-      const fileExtension = await file.name
-        .slice(file.name.lastIndexOf("."))
-        .toLowerCase();
+    fileInput.accept = '.obj, .glb, .fbx, .stl'
+    fileInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            // Validate the file type
+            const fileExtension = await file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+            
+            if(['.obj', '.glb', '.fbx', '.stl'].includes(fileExtension)) {
+                console.log(`File uploaded: ${file.name}`);
+                const fileURL = URL.createObjectURL(file);
 
       if ([".obj", ".glb", ".fbx", ".stl"].includes(fileExtension)) {
         console.log(`File uploaded: ${file.name}`);
@@ -64,17 +63,18 @@ export function createScene1(scene, camera, renderer, gui, fileInput) {
 
           filesList.push(file.name);
           selection.options(filesList);
-          alert(`Successfully loaded: ${file.name}`);
+          alert(`Bestand succesvol geladen: ${file.name}`);
         } catch (error) {
-          alert(`Error loading file: ${file.name}`);
+          alert(`Fout bij het laden van bestand: ${file.name}`);
           console.error(error);
         }
       } else {
         alert(
-          "Invalid file type. Please upload a .obj, .glb, .fbx or .stl file."
+          "Ongeldig bestandstype. Upload een bestand in het formaat .obj, .glb, .fbx of .stl."
         );
       }
     }
+  }
   });
 
   // Define settings for GUI

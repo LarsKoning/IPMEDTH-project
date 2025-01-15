@@ -24,7 +24,7 @@ export function createScene3(scene, camera, renderer, gui, fileInput) {
                 reader.readAsArrayBuffer(file); // Read the file as a binary buffer
             }
         } else {
-            alert('Invalid file type. Please upload a .las, .laz or .ply file.');
+            alert('Ongeldig bestandstype. Upload een bestand in het formaat .las, .laz of .ply.');
         }
     });
 

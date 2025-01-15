@@ -1,8 +1,6 @@
-// ES6 Modules import (zorg ervoor dat je bundler zoals Webpack of Vite gebruikt)
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+export function createScene2(scene, camera, renderer, gui, fileInput, controls) {
+  controls.enable = true;
 
-export function createScene2(scene, camera, renderer, gui, fileInput) {
   const filesList = [];
   let currentFile = null;
   let sphereMesh = null;
@@ -78,7 +76,7 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
         await addFile(file);
       } else {
         alert(
-          "Invalid file type. Please upload a .jpg, .jpeg, .png, or .webp file."
+          "Ongeldig bestandstype. Upload een bestand in het formaat .jpg, .jpeg, .png of .webp."
         );
       }
     }
@@ -130,7 +128,7 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
       (error) => {
         removeLoadingIndicator(loadingIndicator);
         console.error("Error loading panorama image:", error);
-        alert("Het panorama kon niet worden geladen. Controleer het bestand.");
+        alert("De panorama kon niet worden geladen. Controleer het bestand of contacteer de beheerder.");
       }
     );
   }
@@ -138,7 +136,7 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
   function validatePanorama(image) {
     if (image.width / image.height !== 2) {
       alert(
-        "Dit bestand lijkt geen geldig panorama te zijn. Breedte/hoogte verhouding moet 2:1 zijn."
+        "Dit bestand lijkt geen geldig panorama te zijn, ga naar de Foto's omgeving."
       );
       return false;
     }
@@ -177,15 +175,6 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
   function removeLoadingIndicator(indicator) {
     document.body.removeChild(indicator);
   }
-
-  // OrbitControls instellen zodat de gebruiker alleen het hoofd kan bewegen
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.enableZoom = false; // Zoom uitschakelen
-  controls.enablePan = false; // Pan uitschakelen
-  controls.maxPolarAngle = Math.PI / 2; // Beperkt de verticale rotatie
-  controls.minPolarAngle = Math.PI / 4; // Beperkt de neerwaartse rotatie
-  controls.update();
 
   function animate() {
     controls.update(); // Houd de camera-updates soepel
