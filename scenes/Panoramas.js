@@ -24,7 +24,8 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
     if (!mediaViewerFolder) {
       mediaViewerFolder = gui.addFolder("Media");
       const folderElement = mediaViewerFolder.domElement;
-      folderElement.id = "mediaFolder";
+      folderElement.classList.add("photosFolder");
+      folderElement.id = "photosFolder";
     }
 
     const index = filesList.length - 1;
@@ -118,8 +119,8 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
   var mediaViewerFolder = gui.addFolder("Galerij");
 
   const folderElement = mediaViewerFolder.domElement;
-  folderElement.classList.add("mediaFolder");
-  folderElement.id = "mediaFolder";
+  folderElement.classList.add("photosFolder");
+  folderElement.id = "photosFolder";
 
   async function fetchPhotosFromDrive() {
     try {
