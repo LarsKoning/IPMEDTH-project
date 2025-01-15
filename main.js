@@ -278,8 +278,8 @@ function createBackButton() {
   const screenHeight = window.innerHeight;
 
   // Set position in the left-top corner with a small offset
-  const xPosition = -screenWidth / 384; // Left side with a little margin
-  const yPosition = screenHeight / 384; // Top side with a little margin
+  const xPosition = -screenWidth / 384 - 0.5; // Left side with a little margin
+  const yPosition = screenHeight / 384 + 0.2; // Top side with a little margin
 
   backButtonBlock.position.set(xPosition, yPosition, -1.5);
 }
