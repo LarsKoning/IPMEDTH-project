@@ -122,6 +122,7 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
     const img = new Image();
     img.onload = () => {
       // Reset het canvas en teken de originele afbeelding
+
       currentCanvas.width = img.width;
       currentCanvas.height = img.height;
       currentContext.drawImage(img, 0, 0);
