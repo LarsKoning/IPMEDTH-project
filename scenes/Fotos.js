@@ -1,138 +1,187 @@
 export function createScene0(scene, camera, renderer, gui, fileInput) {
-  const filesList = new Set();
+  const filesList = [];
   let currentImage = null;
   let currentCanvas = document.createElement("canvas");
   let currentContext = currentCanvas.getContext("2d");
   let currentFile = null;
 
-  // Google API credentials
-  const API_KEY = "AIzaSyBSRS_xgFTJ7g2g26ilFw1jgmzhpCYA1M4";
-  // const CLIENT_ID =
-  //   "1038445148870-lh781sgn15mr57ipj2df0rk2mj62v1qc.apps.googleusercontent.com";
-  const PHOTOS_FOLDER_ID = "1MwoH1lEvhzVdjIvKpiA8zlTc32rvxnGk";
-
-  async function fetchPhotosFromDrive() {
-    try {
-        const response = await fetch(
-            `https://www.googleapis.com/drive/v3/files?q='${PHOTOS_FOLDER_ID}'+in+parents+and+mimeType+contains+'image/'&key=${API_KEY}&fields=files(id,name,mimeType)`
-        );
-
-        const data = await response.json();
-        console.log("Photos data:", data);
-        const files = data.files;
-
-        if (files && files.length > 0) {
-            files.forEach((file) => {
-                if (!filesList.has(file.id)) {
-                    filesList.add(file.id);
-                    file.url = `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${API_KEY}`;
-
-                    if (!mediaViewerFolder) {
-                        mediaViewerFolder = gui.addFolder("Photo's");
-                        const folderElement = mediaViewerFolder.domElement;
-                        folderElement.classList.add("photosFolder");
-                        folderElement.id = "photosFolder";
-                    }
-
-                    const index = filesList.size - 1;
-                    const propertyName = `Foto ${index + 1}`;
-                    const elementController = mediaViewerFolder.add(
-                        { [propertyName]: () => {} },
-                        propertyName
-                    );
-
-                    elementController.name(file.name);
-
-                    // Stel de achtergrond van de widget in als thumbnail
-                    const buttonElement = elementController.domElement;
-                    buttonElement.style.cursor = "pointer";
-                    buttonElement.style.backgroundImage = `url(${file.url})`;
-                    buttonElement.style.backgroundSize = "cover";
-                    buttonElement.style.backgroundPosition = "center";
-                    buttonElement.style.border = "2px solid transparent";
-
-                    buttonElement.addEventListener("click", () => {
-                        currentFile = file;
-                        applyAdjustments();
-                        resetCanvas();
-
-                        const allButtons = document.querySelectorAll(
-                            "#photosFolder button"
-                        );
-                        allButtons.forEach(
-                            (btn) => (btn.style.border = "2px solid transparent")
-                        );
-                        buttonElement.style.border = "2px solid #00f";
-
-                        const img = new Image();
-                        img.onload = () => {
-                            const width = img.width / 2;
-                            const height = img.height / 2;
-
-                            const textureLoader = new THREE.TextureLoader();
-                            textureLoader.load(
-                                file.url,
-                                (texture) => {
-                                    const material = new THREE.MeshBasicMaterial({
-                                        map: texture,
-                                        side: THREE.DoubleSide,
-                                    });
-
-                                    const geometry = new THREE.PlaneGeometry(
-                                        width / 100,
-                                        height / 100
-                                    );
-                                    currentImage = new THREE.Mesh(geometry, material);
-                                    currentImage.position.set(0, 0, -5);
-                                    scene.add(currentImage);
-                                },
-                                undefined,
-                                (err) => console.error("Texture loading error:", err)
-                            );
-                        };
-                        img.src = file.url;
-                    });
-                }
-            });
-        } else {
-            console.log("No photos found in the specified folder.");
-        }
-    } catch (error) {
-        console.error("Error fetching photos from Google Drive:", error);
-    }
-}
-
-
-  // function addFileToMediaViewer(name, url) {
-  //   console.log(`Nieuwe foto toegevoegd: ${name}`);
-
-  //   updateMediaViewer(file);
-  // }
-
-  function resetCanvas() {
-    //kijken
-    while (scene.children.length > 0) {
-      const object = scene.children[0];
-      if (object.geometry) object.geometry.dispose();
-      if (object.material) {
-        if (object.material.map) object.material.map.dispose();
-        object.material.dispose();
-      }
-      scene.remove(object);
-    }
-    currentImage = null;
+  // Voeg een bestand toe aan de lijst en toon het in de mediaviewer
+  async function addFile(file) {
+    const fileURL = URL.createObjectURL(file);
+    filesList.push({ name: file.name, url: fileURL });
+    updateMediaViewer();
   }
 
-  fetchPhotosFromDrive(); // Call the function to fetch photos on load
+  function updateMediaViewer() {
+    // Controleer of de folder al bestaat; maak deze indien nodig
+    if (!mediaViewerFolder) {
+      mediaViewerFolder = gui.addFolder("Photo's");
+      const folderElement = mediaViewerFolder.domElement;
+      folderElement.id = "photosFolder";
+    }
+
+    const index = filesList.length - 1;
+
+    const propertyName = `Foto ${index}`;
+
+    // Voeg de afbeelding toe aan de GUI
+    const elementController = mediaViewerFolder.add(
+      { [propertyName]: () => selectImage(index) },
+      propertyName,
+      console.log(filesList),
+      console.log(index)
+    );
+
+    // Voeg nieuwe items toe uit filesList
+    filesList.forEach((file) => {
+      elementController.name(file.name);
+      // Voeg een thumbnail toe
+      const thumbnail = document.createElement("img");
+      thumbnail.src = file.url;
+
+      // Event listener voor het selecteren van een afbeelding
+      thumbnail.addEventListener("click", () => {
+        selectImage(index);
+        highlightThumbnail(thumbnail);
+      });
+
+      // Voeg visuele thumbnail toe aan het element in de GUI
+      const domElement = elementController.domElement;
+      domElement.style.backgroundImage = `url(${file.url})`;
+
+      // console.log(filesList);
+    });
+  }
+
+  // Highlight geselecteerde thumbnail
+  function highlightThumbnail(selectedThumbnail) {
+    const allThumbnails = document.querySelectorAll("img");
+    allThumbnails.forEach(
+      (img) => (img.style.border = "2px solid transparent")
+    );
+    selectedThumbnail.style.border = "2px solid #00f";
+  }
+
+  // Selecteer een afbeelding en toon deze
+  function selectImage(index) {
+    const file = filesList[index];
+    console.log(`Geselecteerde foto: ${file.name}`);
+
+    if (!currentImage) {
+      currentImage = document.createElement("img");
+      // currentImage.style.position = "absolute";
+      // currentImage.style.top = "10px";
+      // currentImage.style.right = "10px";
+      // currentImage.style.width = "300px";
+      // currentImage.style.border = "2px solid #fff";
+      document.body.appendChild(currentImage);
+    }
+
+    currentImage.src = file.url;
+  }
+
+  // Bestand uploaden via de fileInput
+  fileInput.accept = ".jpg, .jpeg, .png, .webp";
+  fileInput.addEventListener("change", async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const fileExtension = file.name
+        .slice(file.name.lastIndexOf("."))
+        .toLowerCase();
+      if ([".jpg", ".jpeg", ".png", ".webp"].includes(fileExtension)) {
+        console.log(`File uploaded: ${file.name}`);
+        await addFile(file);
+      } else {
+        alert(
+          "Invalid file type. Please upload a .jpg, .jpeg, .png or .webp file."
+        );
+      }
+    }
+  });
 
   // GUI instellingen
   const settings = {
+    upload: function () {
+      fileInput.click();
+    },
     exposure: 0,
     highlights: 0,
     shadows: 0,
   };
 
+  // Initiëren van de GUI
+  gui.add(settings, "upload").name("Upload Foto's");
+
+  // Bewerkingsopties-folder
   const editing = gui.addFolder("Bewerkings opties");
+
+  // Hulpfunctie om de afbeelding aan te passen
+  function applyAdjustments() {
+    if (!currentFile || !currentContext) return;
+
+    const img = new Image();
+    img.onload = () => {
+      // Reset het canvas en teken de originele afbeelding
+      currentCanvas.width = img.width;
+      currentCanvas.height = img.height;
+      currentContext.drawImage(img, 0, 0);
+
+      const imgData = currentContext.getImageData(
+        0,
+        0,
+        currentCanvas.width,
+        currentCanvas.height
+      );
+      const data = imgData.data;
+
+      // Pas helderheid, highlights en schaduwen toe
+      const exposureFactor = Math.pow(2, settings.exposure / 100);
+      const highlightsFactor = settings.highlights / 100;
+      const shadowsFactor = settings.shadows / 100;
+
+      for (let i = 0; i < data.length; i += 4) {
+        // Pas de helderheid, highlights en schaduwen toe
+        data[i] = adjustPixel(
+          data[i],
+          exposureFactor,
+          highlightsFactor,
+          shadowsFactor
+        ); // Rood
+        data[i + 1] = adjustPixel(
+          data[i + 1],
+          exposureFactor,
+          highlightsFactor,
+          shadowsFactor
+        ); // Groen
+        data[i + 2] = adjustPixel(
+          data[i + 2],
+          exposureFactor,
+          highlightsFactor,
+          shadowsFactor
+        ); // Blauw
+      }
+
+      currentContext.putImageData(imgData, 0, 0);
+
+      // Update de afbeelding in de Three.js-scène
+      displayImageInScene(currentCanvas.toDataURL());
+    };
+
+    img.src = currentFile.url; // Gebruik de originele afbeelding
+  }
+
+  // Hulpfunctie om een pixelwaarde aan te passen
+  function adjustPixel(value, exposure, highlights, shadows) {
+    let newValue = value * exposure; // Pas helderheid toe
+    if (newValue > 128) {
+      newValue += highlights * (255 - newValue); // Highlights
+    } else {
+      newValue += shadows * newValue; // Shadows
+    }
+    return Math.min(Math.max(newValue, 0), 255); // Houd de waarde binnen het bereik 0-255
+  }
+
+  // Voeg eventlisteners toe aan de sliders
   editing
     .add(settings, "exposure", -100, 100)
     .name("Helderheid")
@@ -146,74 +195,77 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
     .name("Schaduwen")
     .onChange(applyAdjustments);
 
+  // Mediaviewer-folder
   var mediaViewerFolder = gui.addFolder("Galerij");
-  mediaViewerFolder.domElement.classList.add("photosFolder");
-  mediaViewerFolder.domElement.id = "photosFolder";
+  const folderElement = mediaViewerFolder.domElement;
+  folderElement.id = "photosFolder";
 
-  // Hulpfunctie om de afbeelding aan te passen
-  function applyAdjustments() {
-    if (!currentFile || !currentContext) return;
+  function displayImageInScene(fileURL) {
+    // Reset de canvas en verwijder oude objecten
+    resetCanvas();
 
+    // Maak een nieuw Image object om de originele afmetingen van de afbeelding te verkrijgen
     const img = new Image();
     img.onload = () => {
-      currentCanvas.width = img.width;
-      currentCanvas.height = img.height;
-      currentContext.drawImage(img, 0, 0);
+      const width = img.width / 2;
+      const height = img.height / 2;
 
-      const imgData = currentContext.getImageData(
-        0,
-        0,
-        currentCanvas.width,
-        currentCanvas.height
+      const textureLoader = new THREE.TextureLoader();
+      textureLoader.load(
+        fileURL,
+        (texture) => {
+          const material = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+          });
+
+          const geometry = new THREE.PlaneGeometry(width / 100, height / 100);
+
+          currentImage = new THREE.Mesh(geometry, material);
+
+          currentImage.position.set(0, 0, -5);
+
+          scene.add(currentImage);
+        },
+        undefined,
+        (err) => console.error("Texture loading error:", err)
       );
-      const data = imgData.data;
+    };
 
-      const exposureFactor = Math.pow(2, settings.exposure / 100);
-      const highlightsFactor = settings.highlights / 100;
-      const shadowsFactor = settings.shadows / 100;
+    img.src = fileURL; // Start het laden van de afbeelding
+  }
 
-      for (let i = 0; i < data.length; i += 4) {
-        data[i] = adjustPixel(
-          data[i],
-          exposureFactor,
-          highlightsFactor,
-          shadowsFactor
-        ); // R
-        data[i + 1] = adjustPixel(
-          data[i + 1],
-          exposureFactor,
-          highlightsFactor,
-          shadowsFactor
-        ); // G
-        data[i + 2] = adjustPixel(
-          data[i + 2],
-          exposureFactor,
-          highlightsFactor,
-          shadowsFactor
-        ); // B
+  function resetCanvas() {
+    // Verwijder alle kinderen van de scene
+    while (scene.children.length > 0) {
+      const object = scene.children[0];
+      if (object.geometry) object.geometry.dispose();
+      if (object.material) {
+        if (object.material.map) object.material.map.dispose();
+        object.material.dispose();
       }
-
-      currentContext.putImageData(imgData, 0, 0);
-      displayImageInScene(currentCanvas.toDataURL());
-    };       
-
-    img.src = currentFile.url;
-  }
-
-  function adjustPixel(value, exposure, highlights, shadows) {
-    let newValue = value * exposure;
-    if (newValue > 128) {
-      newValue += highlights * (255 - newValue);
-    } else {
-      newValue += shadows * newValue;
+      scene.remove(object);
     }
-    return Math.min(Math.max(newValue, 0), 255);
+
+    // Reset currentImage
+    currentImage = null;
   }
 
+  function selectImage(index) {
+    const file = filesList[index];
+    console.log(`Geselecteerde foto: ${file.name}`);
+
+    currentFile = file; // Update currentFile
+    applyAdjustments(); // Pas de instellingen toe op de geselecteerde afbeelding
+
+    // Reset canvas en toon de afbeelding in de 3D-scène
+    displayImageInScene(file.url);
+  }
+
+  // Animate functie
   function animate() {
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
   }
-
   animate();
 }

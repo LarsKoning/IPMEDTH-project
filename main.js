@@ -1,428 +1,345 @@
-import GUI from "lil-gui";
-import { VRButton } from "three/examples/jsm/webxr/VRButton.js";
-import ThreeMeshUI from "three-mesh-ui";
+import GUI from 'lil-gui';
+import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
+import ThreeMeshUI from 'three-mesh-ui';
 
-let scene,
-  camera,
-  renderer,
-  currentAnimation,
-  gui,
-  fileInput,
-  backButtonBlock,
-  container;
+let scene, camera, renderer, currentAnimation, gui, fileInput, backButtonBlock, container;
 let raycaster, mouse, controller1, controller2;
 const intersectionObjects = []; // Array to store interactive UI elements
 
 export function initScene() {
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xe6e6e6);
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xE6E6E6);
 
-  camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-  );
-  camera.position.z = 2;
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 2;
 
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.xr.enabled = true;
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.xr.enabled = true;
 
-  document.body.appendChild(renderer.domElement);
-  document.body.appendChild(VRButton.createButton(renderer));
+    document.body.appendChild(renderer.domElement);
+    document.body.appendChild(VRButton.createButton(renderer));
 
-  // Detect when VR starts
-  renderer.xr.addEventListener("sessionstart", onEnterVR);
+    // Initialize raycaster and mouse
+    raycaster = new THREE.Raycaster();
+    mouse = new THREE.Vector2();
 
-  // Detect when VR ends
-  renderer.xr.addEventListener("sessionend", onExitVR);
+    // Add VR controllers
+    controller1 = renderer.xr.getController(0);
+    controller2 = renderer.xr.getController(1);
+    scene.add(controller1);
+    scene.add(controller2);
 
-  // Initialize raycaster and mouse
-  raycaster = new THREE.Raycaster();
-  mouse = new THREE.Vector2();
+    controller1.addEventListener('selectstart', onSelectStart);
+    controller2.addEventListener('selectstart', onSelectStart);
 
-  // Add VR controllers
-  controller1 = renderer.xr.getController(0);
-  controller2 = renderer.xr.getController(1);
-  scene.add(controller1);
-  scene.add(controller2);
+    addLights();
+    createUI();
+    
+    createBackButton(); // Create the back button (hidden initially)
 
-  controller1.addEventListener("selectstart", onSelectStart);
-  controller2.addEventListener("selectstart", onSelectStart);
+    animate();
 
-  addLights();
-  createUI();
-
-  createBackButton(); // Create the back button (hidden initially)
-
-  animate();
-
-  // Add mouse event listener for desktop interaction
-  window.addEventListener("click", onMouseClick);
-  window.addEventListener("resize", onWindowResize);
-}
-
-function onEnterVR() {
-  console.log("Entering VR mode");
-
-  // Set up container for VR mode
-  const distance = -2; // Fixed distance for VR UI
-  const height = 1.5; // Smaller height for VR UI panel
-  const width = height * camera.aspect;
-
-  if (container) {
-    container.set({
-      width: width,
-      height: height,
-    });
-
-    container.position.set(0, 1, distance); // Positioned slightly above the user's line of sight
-  }
-}
-
-function onExitVR() {
-  console.log("Exiting VR mode");
-
-  // Set up container for non-VR (site) mode
-  const distance = -2;
-  const height =
-    4 * Math.tan((camera.fov * Math.PI) / 360) * Math.abs(distance);
-  const width = height * camera.aspect;
-
-  if (container) {
-    container.set({
-      width: width,
-      height: height,
-    });
-
-    container.position.set(0, 0, distance); // Center the container in front of the camera
-  }
+    // Add mouse event listener for desktop interaction
+    window.addEventListener('click', onMouseClick);
+    window.addEventListener('resize', onWindowResize);
 }
 
 function createUI() {
-  const distance = -2; // Distance from camera to container
-  const height =
-    4 * Math.tan((camera.fov * Math.PI) / 360) * Math.abs(distance); // Full visible height
-  const width = height * camera.aspect;
-
-  // Main container filling the screen
-  container = new ThreeMeshUI.Block({
-    width: width, // Slightly smaller width than the full screen for padding
-    height: height, // Smaller height to give some top and bottom space
-    padding: 0.05,
-    justifyContent: "space-around",
-    alignItems: "center",
-    contentDirection: "column",
-    fontFamily:
-      "https://unpkg.com/three-mesh-ui/examples/assets/Roboto-msdf.json",
-    fontTexture:
-      "https://unpkg.com/three-mesh-ui/examples/assets/Roboto-msdf.png",
-    backgroundColor: new THREE.Color(0xf2f2f2),
-    backgroundOpacity: 1,
-  });
-
-  container.position.set(0, 0, distance); // Center container vertically at distance -2
-  scene.add(container);
-
-  // Title (h1 equivalent)
-  const titleBlock = new ThreeMeshUI.Block({
-    width: width * 0.9,
-    height: 0.25,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundOpacity: 0,
-  });
-  titleBlock.add(
-    new ThreeMeshUI.Text({
-      content: "Welkom bij casus: Apeldoorn huisje",
-      fontSize: height / 22,
-      fontColor: new THREE.Color(0x000000),
-      fontWeight: "600",
-    })
-  );
-  container.add(titleBlock);
-
-  // Subtitle (h2 equivalent)
-  const subtitleBlock = new ThreeMeshUI.Block({
-    width: width * 0.9,
-    height: height / 24,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundOpacity: 0,
-  });
-  subtitleBlock.add(
-    new ThreeMeshUI.Text({
-      content: "Kies een omgeving waarin u wilt werken.",
-      fontSize: height / 28,
-      fontColor: new THREE.Color(0x000000),
-      fontWeight: "600",
-    })
-  );
-  container.add(subtitleBlock);
-
-  // Button container
-  const buttonContainer = new ThreeMeshUI.Block({
-    width: width * 0.9,
-    height: height / 8,
-    justifyContent: "space-around",
-    alignItems: "center",
-    contentDirection: "row",
-    backgroundOpacity: 0,
-  });
-
-  const buttonOptions = [
-    { label: "Foto's", scene: "Fotos" },
-    { label: "3D objecten", scene: "Objects" },
-    { label: "Panorama's", scene: "Panoramas" },
-    { label: "Puntenwolken", scene: "Pointcloud" },
-  ];
-
-  buttonOptions.forEach((option) => {
-    const buttonBlock = new ThreeMeshUI.Block({
-      width: width / 7,
-      height: height / 12,
-      justifyContent: "center",
-      alignItems: "center",
-      margin: 0.02,
-      padding: 0.02,
-      backgroundColor: new THREE.Color(0x0d275e),
-      borderRadius: 0.05,
-      fontWeight: "700",
-    });
-
-    const buttonText = new ThreeMeshUI.Text({
-      content: option.label,
-      fontSize: 0.14,
-      fontColor: new THREE.Color(0xe6e6e6),
-    });
-
-    buttonBlock.add(buttonText);
-
-    buttonBlock.setupState({
-      state: "hovered",
-      attributes: {
+    // Main container filling the screen
+    container = new ThreeMeshUI.Block({
+        width: '100vw',
+        height: '100vh',
+        padding: 0.1,
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        contentDirection: 'column',
+        fontFamily: 'https://unpkg.com/three-mesh-ui/examples/assets/Roboto-msdf.json',
+        fontTexture: 'https://unpkg.com/three-mesh-ui/examples/assets/Roboto-msdf.png',
         backgroundColor: new THREE.Color(0xe6e6e6),
-        fontColor: new THREE.Color(0x0d275e),
-      },
-    });
-    buttonBlock.setupState({
-      state: "idle",
-      attributes: {
-        backgroundColor: new THREE.Color(0x0d275e),
-        fontColor: new THREE.Color(0xe6e6e6),
-      },
+        backgroundOpacity: 1
     });
 
-    // Add a console log when the button is clicked
-    buttonBlock.onSelect = () => {
-      console.log(
-        `Button "${option.label}" clicked. Scene ID: ${option.scene}`
-      );
-      loadScene(option.scene);
-    };
+    container.position.set(0, 1.5, -2);
+    scene.add(container);
 
-    buttonBlock.isUI = true;
-    intersectionObjects.push(buttonBlock);
-    buttonContainer.add(buttonBlock);
-  });
+    // Title (h1 equivalent)
+    const titleBlock = new ThreeMeshUI.Block({
+        width: 2.8,
+        height: 0.2,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundOpacity: 0
+    });
+    titleBlock.add(new ThreeMeshUI.Text({
+        content: 'Welkom bij casus: Apeldoorn huisje.',
+        fontSize: 0.15,
+        fontColor: new THREE.Color(0x000000),
+        fontWeight: '600'
+    }));
+    container.add(titleBlock);
 
-  container.add(buttonContainer);
+    // Subtitle (h2 equivalent)
+    const subtitleBlock = new ThreeMeshUI.Block({
+        width: 2.8,
+        height: 0.1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundOpacity: 0
+    });
+    subtitleBlock.add(new ThreeMeshUI.Text({
+        content: 'Kies een omgeving waarin u wilt werken.',
+        fontSize: 0.1,
+        fontColor: new THREE.Color(0x000000),
+        fontWeight: '600'
+    }));
+    container.add(subtitleBlock);
+
+    // Button container
+    const buttonContainer = new ThreeMeshUI.Block({
+        width: 2.8,
+        height: 0.4,
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        contentDirection: 'row',
+        backgroundOpacity: 0
+    });
+
+    const buttonOptions = [
+        { label: "Foto's", scene: 'Fotos' },
+        { label: '3D objecten', scene: 'Objects' },
+        { label: "Panorama's", scene: 'Panoramas' },
+        { label: 'Puntenwolken', scene: 'Pointcloud' }
+    ];
+
+    buttonOptions.forEach(option => {
+        const buttonBlock = new ThreeMeshUI.Block({
+            width: 0.6,
+            height: 0.15,
+            justifyContent: 'center',
+            alignItems: 'center',
+            margin: 0.02,
+            padding: 0.02,
+            backgroundColor: new THREE.Color(0x0d275e),
+            borderRadius: 0.05,
+            fontWeight: '700'
+        });
+
+        const buttonText = new ThreeMeshUI.Text({
+            content: option.label,
+            fontSize: 0.08,
+            fontColor: new THREE.Color(0xe6e6e6)
+        });
+
+        buttonBlock.add(buttonText);
+
+        buttonBlock.setupState({
+            state: 'hovered',
+            attributes: {
+                backgroundColor: new THREE.Color(0xe6e6e6),
+                fontColor: new THREE.Color(0x0d275e)
+            }
+        });
+        buttonBlock.setupState({
+            state: 'idle',
+            attributes: {
+                backgroundColor: new THREE.Color(0x0d275e),
+                fontColor: new THREE.Color(0xe6e6e6)
+            }
+        });
+
+        // Add a console log when the button is clicked
+        buttonBlock.onSelect = () => {
+            console.log(`Button "${option.label}" clicked. Scene ID: ${option.scene}`);
+            loadScene(option.scene);
+        };
+
+        buttonBlock.isUI = true;
+        intersectionObjects.push(buttonBlock);
+        buttonContainer.add(buttonBlock);
+    });
+
+    container.add(buttonContainer);
 }
+
 
 function createBackButton() {
-  // Create the back button UI block
-  backButtonBlock = new ThreeMeshUI.Block({
-    width: 0.6, // Increased width to fit the text comfortably
-    height: 0.2, // Increased height to fit the text comfortably
-    justifyContent: "center", // Center text horizontally
-    alignItems: "center", // Center text vertically
-    paddingLeft: 10, // No padding to avoid pushing text away from the center
-    margin: 0, // No margin
-    borderWidth: 0.01, // Border width
-    borderRadius: 0.05, // Rounded corners
-    backgroundColor: new THREE.Color(0xe6e6e6), // Background color
-    borderColor: new THREE.Color(0x0d275e), // Border color
-    fontFamily:
-      "https://unpkg.com/three-mesh-ui/examples/assets/Roboto-msdf.json",
-    fontTexture:
-      "https://unpkg.com/three-mesh-ui/examples/assets/Roboto-msdf.png",
-  });
+    // Create the back button UI block
+    backButtonBlock = new ThreeMeshUI.Block({
+        width: 0.6, // Increased width to fit the text comfortably
+        height: 0.2, // Increased height to fit the text comfortably
+        justifyContent: 'center', // Center text horizontally
+        alignItems: 'center',   // Center text vertically
+        paddingLeft: 10, // No padding to avoid pushing text away from the center
+        margin: 0,  // No margin
+        borderWidth: 0.01, // Border width
+        borderRadius: 0.05, // Rounded corners
+        backgroundColor: new THREE.Color(0xE6E6E6), // Background color
+        borderColor: new THREE.Color(0x0D275E), // Border color
+        fontFamily: 'https://unpkg.com/three-mesh-ui/examples/assets/Roboto-msdf.json',
+        fontTexture: 'https://unpkg.com/three-mesh-ui/examples/assets/Roboto-msdf.png'
+    });
 
-  const backButtonText = new ThreeMeshUI.Text({
-    content: "Back to Menu",
-    fontSize: 0.12,
-    fontColor: new THREE.Color(0x0d275e),
-    fontWeight: "700",
-  });
+    const backButtonText = new ThreeMeshUI.Text({
+        content: 'Back to Menu',
+        fontSize: 0.06,
+        fontColor: new THREE.Color(0x0D275E),
+        fontWeight: '700'
+    });
 
-  backButtonBlock.add(backButtonText);
 
-  // Add an onSelect function for the back button
-  backButtonBlock.onSelect = () => {
-    console.log("Back to menu button clicked.");
-    showMenu();
-  };
+    backButtonBlock.add(backButtonText);
 
-  backButtonBlock.isBackButton = true;
-  intersectionObjects.push(backButtonBlock);
+    // Add an onSelect function for the back button
+    backButtonBlock.onSelect = () => {
+        console.log('Back to menu button clicked.');
+        showMenu();
+    };
 
-  // Position it at the top-left corner relative to the camera
-  backButtonBlock.position.set(0, 0, -1.5);
+    backButtonBlock.isBackButton = true;
+    intersectionObjects.push(backButtonBlock);
+
+    // Position it at the top-left corner relative to the camera
+    backButtonBlock.position.set(0, 0, -1.5);
 }
 
-function onMouseMove(event) {
+function onMouseClick(event) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  
+
     raycaster.setFromCamera(mouse, camera);
-  
+
     const intersects = raycaster.intersectObjects(intersectionObjects, true);
-    intersectionObjects.forEach((button) => {
-      if (intersects.length > 0 && button === intersects[0].object.parent) {
-        button.setState("hovered");
-      } else {
-        button.setState("idle");
-      }
-    });
-  }
+    if (intersects.length > 0) {
+        let button = intersects[0].object;
 
-function onMouseClick(event) {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        // Traverse up to find the parent Block with onSelect
+        while (button && !button.onSelect) {
+            button = button.parent;
+        }
 
-  raycaster.setFromCamera(mouse, camera);
-
-  const intersects = raycaster.intersectObjects(intersectionObjects, true);
-  if (intersects.length > 0) {
-    let button = intersects[0].object;
-
-    // Traverse up to find the parent Block with onSelect
-    while (button && !button.onSelect) {
-      button = button.parent;
+        if (button && button.onSelect) {
+            button.onSelect();
+        }
     }
-
-    if (button && button.onSelect) {
-      button.onSelect();
-    }
-  }
 }
 
 function onSelectStart(event) {
-  const controller = event.target;
-  const intersections = raycaster.intersectObjects(intersectionObjects, true);
+    const controller = event.target;
+    const intersections = raycaster.intersectObjects(intersectionObjects, true);
 
-  if (intersections.length > 0) {
-    let button = intersections[0].object;
+    if (intersections.length > 0) {
+        let button = intersections[0].object;
 
-    // Traverse up to find the parent Block with onSelect
-    while (button && !button.onSelect) {
-      button = button.parent;
+        // Traverse up to find the parent Block with onSelect
+        while (button && !button.onSelect) {
+            button = button.parent;
+        }
+
+        if (button && button.onSelect) {
+            button.onSelect();
+        }
     }
-
-    if (button && button.onSelect) {
-      button.onSelect();
-    }
-  }
 }
 
 function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 function addLights() {
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-  scene.add(ambientLight);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-  directionalLight.position.set(1, 1, 1);
-  scene.add(directionalLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    directionalLight.position.set(1, 1, 1);
+    scene.add(directionalLight);
 }
 
 function animate() {
-  renderer.setAnimationLoop(() => {
-    ThreeMeshUI.update(); // Update the UI each frame
-    renderer.render(scene, camera);
-  });
+    renderer.setAnimationLoop(() => {
+        ThreeMeshUI.update(); // Update the UI each frame
+        renderer.render(scene, camera);
+    });
 }
 
 export async function loadScene(sceneId) {
-  // Clear previous scene
-  while (scene.children.length > 0) {
-    scene.remove(scene.children[0]);
-  }
+    // Clear previous scene
+    while (scene.children.length > 0) {
+        scene.remove(scene.children[0]);
+    }
 
-  intersectionObjects.length = 0; // Clear the intersection objects array
+    intersectionObjects.length = 0; // Clear the intersection objects array
 
-  if (currentAnimation) {
-    cancelAnimationFrame(currentAnimation);
-  }
+    if (currentAnimation) {
+        cancelAnimationFrame(currentAnimation);
+    }
 
-  addLights();
+    addLights();
 
-  gui = new GUI();
-  gui.title("Settings menu");
+    gui = new GUI();
+    gui.title("Settings menu");
 
-  // Create a hidden file input
-  fileInput = document.createElement("input");
-  fileInput.type = "file";
-  fileInput.style.display = "none";
-  document.body.appendChild(fileInput);
+    // Create a hidden file input
+    fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
 
-  scene.add(backButtonBlock);
-  intersectionObjects.push(backButtonBlock);
+    scene.add(backButtonBlock);
+    intersectionObjects.push(backButtonBlock);
 
-  switch (sceneId) {
-    case "Fotos":
-      const { createScene0 } = await import("./scenes/Fotos.js");
-      createScene0(scene, camera, renderer, gui, fileInput);
-      break;
-    case "Objects":
-      const { createScene1 } = await import("./scenes/Objects.js");
-      createScene1(scene, camera, renderer, gui, fileInput);
-      break;
-    case "Panoramas":
-      const { createScene2 } = await import("./scenes/Panoramas.js");
-      createScene2(scene, camera, renderer, gui, fileInput);
-      break;
-    case "Pointcloud":
-      const { createScene3 } = await import("./scenes/Pointcloud.js");
-      createScene3(scene, camera, renderer, gui, fileInput);
-      break;
-  }
+    switch (sceneId) {
+        case 'Fotos':
+            const { createScene0 } = await import('./scenes/Fotos.js');
+            createScene0(scene, camera, renderer, gui, fileInput);
+            break;
+        case 'Objects':
+            const { createScene1 } = await import('./scenes/Objects.js');
+            createScene1(scene, camera, renderer, gui, fileInput);
+            break;
+        case 'Panoramas':
+            const { createScene2 } = await import('./scenes/Panoramas.js');
+            createScene2(scene, camera, renderer, gui, fileInput);
+            break;
+        case 'Pointcloud':
+            const { createScene3 } = await import('./scenes/Pointcloud.js');
+            createScene3(scene, camera, renderer, gui, fileInput);
+            break;
+    }
 }
+
 
 export function showMenu() {
-  if (currentAnimation) {
-    cancelAnimationFrame(currentAnimation);
-  }
-
-  while (scene.children.length > 0) {
-    scene.remove(scene.children[0]);
-  }
-
-  if (gui) {
-    gui.destroy(); // Only destroy if gui is defined
-  }
-
-  if (fileInput) {
-    fileInput.remove(); // Only remove if fileInput is defined
-  }
-
-  scene.add(container);
-
-  intersectionObjects.length = 0;
-  container.children.forEach((child) => {
-    if (child.isUI) {
-      intersectionObjects.push(child);
+    if (currentAnimation) {
+        cancelAnimationFrame(currentAnimation);
     }
-  });
+
+    while (scene.children.length > 0) {
+        scene.remove(scene.children[0]);
+    }
+
+    if (gui) {
+        gui.destroy(); // Only destroy if gui is defined
+    }
+
+    if (fileInput) {
+        fileInput.remove(); // Only remove if fileInput is defined
+    } 
+
+    scene.add(container);
+
+    intersectionObjects.length = 0;
+    container.children.forEach(child => {
+        if (child.isUI) {
+            intersectionObjects.push(child);
+        }
+    });
 }
 
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
 });
