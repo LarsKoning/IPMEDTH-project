@@ -9,10 +9,6 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
   let currentContext = currentCanvas.getContext("2d");
   let currentFile = null;
 
-  // Google API credentials
-  const API_KEY = "AIzaSyBSRS_xgFTJ7g2g26ilFw1jgmzhpCYA1M4";
-  const PAN_FOLDER_ID = "1tG8uMunbeUYeRWwIv8hQAst7MiOk1mvx";
-
   // function updateMediaViewer() {
   //   if (!mediaViewerFolder) {
   //     mediaViewerFolder = gui.addFolder("Media");
