@@ -5,11 +5,10 @@ import {
   STLLoader,
   OBJLoader,
 } from "three/examples/jsm/Addons.js";
-import fs from "node:fs";
-import path from "node:path";
 
-export function createScene1(scene, camera, renderer, gui, fileInput) {
-  const controls = new OrbitControls(camera, renderer.domElement);
+
+export function createScene1(scene, camera, renderer, gui, fileInput, controls) {
+  controls.enabled = true
 
   // Map of loaders for different file formats
   const loaderMap = {

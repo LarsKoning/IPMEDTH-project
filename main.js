@@ -1,9 +1,11 @@
 import GUI from "lil-gui";
 import { VRButton } from "three/examples/jsm/webxr/VRButton.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import ThreeMeshUI from "three-mesh-ui";
 
 let scene,
   camera,
+  controls,
   renderer,
   currentAnimation,
   gui,
@@ -28,6 +30,10 @@ export function initScene() {
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.xr.enabled = true;
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.enabled = false;
 
   document.body.appendChild(renderer.domElement);
   document.body.appendChild(VRButton.createButton(renderer));
@@ -394,11 +400,11 @@ export async function loadScene(sceneId) {
       break;
     case "Objects":
       const { createScene1 } = await import("./scenes/Objects.js");
-      createScene1(scene, camera, renderer, gui, fileInput);
+      createScene1(scene, camera, renderer, gui, fileInput, controls);
       break;
     case "Panoramas":
       const { createScene2 } = await import("./scenes/Panoramas.js");
-      createScene2(scene, camera, renderer, gui, fileInput);
+      createScene2(scene, camera, renderer, gui, controls);
       break;
     case "Pointcloud":
       const { createScene3 } = await import("./scenes/Pointcloud.js");
@@ -425,6 +431,9 @@ export function showMenu() {
   }
 
   scene.add(container);
+  controls.reset();
+  controls.enabled = false;
+
 
   intersectionObjects.length = 0;
   container.children.forEach((child) => {

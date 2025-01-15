@@ -2,7 +2,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-export function createScene2(scene, camera, renderer, gui, fileInput) {
+export function createScene2(scene, camera, renderer, gui, controls) {
   const filesList = new Set();
   let currentImage = null;
   let currentCanvas = document.createElement("canvas");
@@ -353,8 +353,7 @@ export function createScene2(scene, camera, renderer, gui, fileInput) {
   }
 
   // OrbitControls instellen zodat de gebruiker alleen het hoofd kan bewegen
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
+  controls.endbled = true;
   controls.enableZoom = false; // Zoom uitschakelen
   controls.enablePan = false; // Pan uitschakelen
   controls.maxPolarAngle = Math.PI / 2; // Beperkt de verticale rotatie
