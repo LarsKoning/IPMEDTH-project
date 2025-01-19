@@ -2,7 +2,6 @@ import { getDownloadURL, listAll } from "firebase/storage";
 import { imagesRef } from "../API.js";
 
 export function createScene0(scene, camera, renderer, gui) {
-  const filesList = [];
   let currentImage = null;
   let currentCanvas = document.createElement("canvas");
   let currentContext = currentCanvas.getContext("2d");
@@ -18,15 +17,20 @@ export function createScene0(scene, camera, renderer, gui) {
             url
           }));
         });
+        console.log(promises);
+        
   
         // Wait for all download URLs to be resolved
         Promise.all(promises).then((files) => {
           // Sort files by name in ascending order
           files.sort((a, b) => a.name.localeCompare(b.name));
+          console.log(files);
+          
   
           // Add sorted files to the GUI
           files.forEach((file, index) => {
-            filesList.push(file);
+            console.log(`Loaded photo: ` + file);
+            
   
             // Create the media viewer folder if it doesn't exist
             if (!mediaViewerFolder) {
@@ -34,13 +38,11 @@ export function createScene0(scene, camera, renderer, gui) {
               const folderElement = mediaViewerFolder.domElement;
               folderElement.id = "photosFolder";
             }
-  
-            const propertyName = file.name;
-  
+    
             // Add the image to the GUI with a click handler
             const elementController = mediaViewerFolder.add(
-              { [propertyName]: () => selectImage(index) },
-              propertyName
+              { [file.name]: () => selectImage(file) },
+              file.name
             );
   
             // Create a thumbnail for the image
@@ -53,7 +55,7 @@ export function createScene0(scene, camera, renderer, gui) {
   
             // Add click event listener for selecting the image
             thumbnail.addEventListener("click", () => {
-              selectImage(index);
+              selectImage(file);
               highlightThumbnail(thumbnail);
             });
   
@@ -75,18 +77,6 @@ export function createScene0(scene, camera, renderer, gui) {
     selectedThumbnail.style.border = "2px solid #00f";
   }
   
-  // Function to select an image and display it
-  function selectImage(index) {
-    const file = filesList[index];
-    console.log(`Selected photo: ${file.name}`);
-  
-    if (!currentImage) {
-      currentImage = document.createElement("img");
-      document.body.appendChild(currentImage);
-    }
-  
-    currentImage.src = file.url;
-  }
   
   // Call the function to load images when the app starts
   loadImagesFromStorage();
@@ -107,6 +97,7 @@ export function createScene0(scene, camera, renderer, gui) {
     if (!currentFile || !currentContext) return;
 
     const img = new Image();
+    img.crossOrigin = "anonymous"; // Allow cross-origin access
     img.onload = () => {
       // Reset het canvas en teken de originele afbeelding
 
@@ -190,6 +181,8 @@ export function createScene0(scene, camera, renderer, gui) {
   folderElement.classList.add("photosFolder");
 
   function displayImageInScene(fileURL) {
+    console.log(`Weergegeven afbeelding: ${fileURL}`);
+    
     // Reset de canvas en verwijder oude objecten
     while (scene.children.length > 0) {
       const object = scene.children[0];
@@ -211,6 +204,7 @@ export function createScene0(scene, camera, renderer, gui) {
       const height = img.height / 2;
 
       const textureLoader = new THREE.TextureLoader();
+      textureLoader.crossOrigin = "anonymous"; // Allow cross-origin access
       textureLoader.load(
         fileURL,
         (texture) => {
@@ -235,9 +229,8 @@ export function createScene0(scene, camera, renderer, gui) {
     img.src = fileURL; // Start het laden van de afbeelding
   }
 
-  function selectImage(index) {
-    const file = filesList[index];
-    console.log(`Geselecteerde foto: ${file.name}`);
+  function selectImage(file) {
+    console.log(`Geselecteerde foto: ${file.url}`);
 
     currentFile = file; // Update currentFile
     applyAdjustments(); // Pas de instellingen toe op de geselecteerde afbeelding
