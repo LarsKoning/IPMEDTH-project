@@ -39,9 +39,25 @@
           </button>
         </section>
       </section>
+
       <button id="backButton" class="menu-button" onclick="showMenu()">
         Back to Menu
       </button>
+
+      <section class="loadingContainer">
+        <article class="loadingCard">
+          <section>
+            <header class="loadingTitle">Bestand laden...</header>
+            <section class="loadingFilename" id="loading-filename">Initialiseren...</section>
+            <section class="progressContainer">
+              <progress class="progressBar" id="loading-progress"></progress>
+            </section>
+            <footer class="progressText">
+              <output id="progress-percentage">0</output>% voltooid
+            </footer>
+          </section>
+        </article>
+      </section>
 
       <script type="module">
         import { showMenu, loadScene, initScene } from "./main.js";

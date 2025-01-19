@@ -2,7 +2,7 @@ import GUI from 'lil-gui';
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 
 
-let scene, camera, renderer, currentAnimation, gui, fileInput, controls;
+let scene, camera, renderer, currentAnimation, gui, controls;
 
 export function initScene() {
     scene = new THREE.Scene();
@@ -44,12 +44,6 @@ export async function loadScene(sceneId) {
     gui = new GUI();
     gui.title("Settings menu");
 
-    // Create a hidden file input
-    fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.style.display = 'none';
-    document.body.appendChild(fileInput);
-
     // Hide menu and show back button
     document.getElementById('menu').style.display = 'none';
     document.getElementById('backButton').style.display = 'block';
@@ -62,7 +56,7 @@ export async function loadScene(sceneId) {
             break;
         case 'Objects':
             const { createScene1 } = await import('./scenes/Objects.js');
-            createScene1(scene, camera, renderer, gui, fileInput, controls);
+            createScene1(scene, camera, renderer, gui, controls);
             break;
         case 'Panoramas':
             const { createScene2 } = await import('./scenes/Panoramas.js');
@@ -70,7 +64,7 @@ export async function loadScene(sceneId) {
             break;
         case 'Pointcloud':
             const { createScene3 } = await import('./scenes/Pointcloud.js');
-            createScene3(scene, camera, renderer, gui, fileInput);
+            createScene3(scene, camera, renderer, gui);
             break;
     }
 }
@@ -83,7 +77,6 @@ export function showMenu() {
     while(scene.children.length > 0) { 
         scene.remove(scene.children[0]); 
         gui.destroy();
-        fileInput.remove();
 
         controls.reset();
         controls.enabled = false;
