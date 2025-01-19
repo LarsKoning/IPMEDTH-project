@@ -8,48 +8,46 @@ export function createScene2(scene, camera, renderer, gui, controls) {
   let sphereMesh = null;
 
   function loadPanoramasFromStorage() {
-    listAll(panoramaRef)
-      .then((result) => {
-        const promises = result.items.map((itemRef) => {
-          return getDownloadURL(itemRef).then((url) => ({
-            name: itemRef.name,
-            url
-          }));
-        });
+    listAll(panoramaRef).then((result) => {
+      const promises = result.items.map((itemRef) => {
+        return getDownloadURL(itemRef).then((url) => ({
+          name: itemRef.name,
+          url,
+        }));
+      });
 
+      // Wait for all download URLs to be resolved
+      Promise.all(promises).then((files) => {
+        // Sort files by name in ascending order
+        files.sort((a, b) => a.name.localeCompare(b.name));
 
-        // Wait for all download URLs to be resolved
-        Promise.all(promises).then((files) => {
-          // Sort files by name in ascending order
-          files.sort((a, b) => a.name.localeCompare(b.name));
+        // Add sorted files to the GUI
+        files.forEach((file, index) => {
+          // Add the image to the GUI with a click handler
+          const elementController = mediaViewerFolder.add(
+            { [file.name]: () => selectFile(file) },
+            file.name
+          );
 
-          // Add sorted files to the GUI
-          files.forEach((file, index) => {
-            // Add the image to the GUI with a click handler
-            const elementController = mediaViewerFolder.add(
-              { [file.name]: () => selectFile(file) },
-              file.name
-            );
-  
-            // Create a thumbnail for the image
-            const thumbnail = document.createElement("img");
-            thumbnail.src = file.url;
-            thumbnail.style.width = "50px"; // Adjust thumbnail size as needed
-            thumbnail.style.height = "50px";
-            thumbnail.style.margin = "5px";
-            thumbnail.style.cursor = "pointer";
+          // Create a thumbnail for the image
+          const thumbnail = document.createElement("img");
+          thumbnail.src = file.url;
+          thumbnail.style.width = "50px"; // Adjust thumbnail size as needed
+          thumbnail.style.height = "50px";
+          thumbnail.style.margin = "5px";
+          thumbnail.style.cursor = "pointer";
 
-            thumbnail.addEventListener("click", () => {
-              selectFile(file);
-              highlightThumbnail(thumbnail);
-            });
-  
-            // Append the thumbnail to the GUI element
-            const domElement = elementController.domElement;
-            domElement.appendChild(thumbnail);
+          thumbnail.addEventListener("click", () => {
+            selectFile(file);
+            highlightThumbnail(thumbnail);
           });
+
+          // Append the thumbnail to the GUI element
+          const domElement = elementController.domElement;
+          domElement.style.backgroundImage = `url(${file.url})`;
         });
       });
+    });
   }
 
   // Highlight geselecteerde thumbnail
@@ -83,7 +81,7 @@ export function createScene2(scene, camera, renderer, gui, controls) {
       (image) => {
         // Valideer of het bestand een panorama is
         if (image.width / image.height == 2) {
-            // Maak een texture van de geladen afbeelding
+          // Maak een texture van de geladen afbeelding
           const texture = new THREE.Texture();
           texture.image = image;
           texture.needsUpdate = true;
@@ -106,7 +104,9 @@ export function createScene2(scene, camera, renderer, gui, controls) {
       undefined,
       (error) => {
         console.error("Error loading panorama image:", error);
-        alert("De panorama kon niet worden geladen. Controleer het bestand of contacteer de beheerder.");
+        alert(
+          "De panorama kon niet worden geladen. Controleer het bestand of contacteer de beheerder."
+        );
       }
     );
   }

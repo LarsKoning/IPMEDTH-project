@@ -14,15 +14,15 @@ export function createScene0(scene, camera, renderer, gui) {
         const promises = result.items.map((itemRef) => {
           return getDownloadURL(itemRef).then((url) => ({
             name: itemRef.name,
-            url
+            url,
           }));
-        });        
-  
+        });
+
         // Wait for all download URLs to be resolved
         Promise.all(promises).then((files) => {
           // Sort files by name in ascending order
           files.sort((a, b) => a.name.localeCompare(b.name));
-          
+
           // Add sorted files to the GUI
           files.forEach((file, index) => {
             // Add the image to the GUI with a click handler
@@ -30,7 +30,7 @@ export function createScene0(scene, camera, renderer, gui) {
               { [file.name]: () => selectImage(file) },
               file.name
             );
-  
+
             // Create a thumbnail for the image
             const thumbnail = document.createElement("img");
             thumbnail.src = file.url;
@@ -38,32 +38,35 @@ export function createScene0(scene, camera, renderer, gui) {
             thumbnail.style.height = "50px";
             thumbnail.style.margin = "5px";
             thumbnail.style.cursor = "pointer";
-  
+
             // Add click event listener for selecting the image
             thumbnail.addEventListener("click", () => {
               selectImage(file);
               highlightThumbnail(thumbnail);
             });
-  
+
             // Append the thumbnail to the GUI element
+
             const domElement = elementController.domElement;
-            domElement.appendChild(thumbnail);
+
+            domElement.style.backgroundImage = `url(${file.url})`;
           });
         });
       })
       .catch((error) => {
-        console.error('Error loading images from Firebase Storage:', error);
+        console.error("Error loading images from Firebase Storage:", error);
       });
   }
-  
+
   // Function to highlight the selected thumbnail
   function highlightThumbnail(selectedThumbnail) {
     const allThumbnails = document.querySelectorAll("img");
-    allThumbnails.forEach((img) => (img.style.border = "2px solid transparent"));
+    allThumbnails.forEach(
+      (img) => (img.style.border = "2px solid transparent")
+    );
     selectedThumbnail.style.border = "2px solid #00f";
   }
-  
-  
+
   // Call the function to load images when the app starts
   loadImagesFromStorage();
 
