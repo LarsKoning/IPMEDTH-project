@@ -5,7 +5,7 @@ import {
   OBJLoader,
 } from "three/examples/jsm/Addons.js";
 
-import { getDownloadURL, listAll } from "firebase/storage";
+import { getDownloadURL, listAll, getMetadata } from "firebase/storage";
 import { objectsRef } from "../API.js";
 
 export function createScene1(scene, camera, renderer, gui, controls) {
@@ -26,12 +26,22 @@ export function createScene1(scene, camera, renderer, gui, controls) {
   async function loadObjectsFromStorage() {
     try {
       showLoadingScreen();
-  
+
       const result = await listAll(objectsRef);
       const promises = result.items.map(async (itemRef) => {
         const fileURL = await getDownloadURL(itemRef);
         const fileExtension = itemRef.name.slice(itemRef.name.lastIndexOf(".")).toLowerCase();
-        return { name: itemRef.name, url: fileURL, extension: fileExtension };
+        
+        // Get file metadata to check size
+        const metadata = await getMetadata(itemRef);
+        const fileSizeInMB = metadata.size / (1024 * 1024);
+        
+        return { 
+          name: itemRef.name, 
+          url: fileURL, 
+          extension: fileExtension,
+          size: fileSizeInMB 
+        };
       });
   
       const files = await Promise.all(promises);
@@ -45,104 +55,66 @@ export function createScene1(scene, camera, renderer, gui, controls) {
         return;
       }
   
-      // Voeg hier de validateAndLoadFBX helper functie toe (buiten de loops)
-      function validateAndLoadFBX(file, loader) {
-        return new Promise((resolve, reject) => {
-          fetch(file.url)
-            .then(response => response.arrayBuffer())
-            .then(buffer => {
-              const header = new Uint8Array(buffer.slice(0, 23));
-              const decoder = new TextDecoder();
-              const headerString = decoder.decode(header);
-              
-              if (!headerString.startsWith('Kaydara FBX Binary')) {
-                loader.load(
-                  file.url,
-                  (object) => resolve(object),
-                  (progress) => {
-                    const progressPercentage = (progress.loaded / progress.total) * 100;
-                    updateLoadingProgress(file.name, progressPercentage);
-                  },
-                  (error) => {
-                    console.error('FBX ASCII loading failed:', error);
-                    reject(error);
-                  }
-                );
-              } else {
-                loader.setResourcePath('');
-                loader.load(
-                  file.url,
-                  (object) => resolve(object),
-                  (progress) => {
-                    const progressPercentage = (progress.loaded / progress.total) * 100.0;
-                    updateLoadingProgress(file.name, progressPercentage);
-                  },
-                  (error) => {
-                    console.error('FBX Binary loading failed:', error);
-                    reject(error);
-                  }
-                );
-              }
-            })
-            .catch(error => {
-              console.error('Error during FBX validation:', error);
-              reject(error);
-            });
-        });
-      }
-  
       for (const file of supportedFiles) {
         try {
-          console.log(`Loading file: ${file.name}`);
-          updateLoadingProgress(file.name, 0);
-          
-          let object;
-          
-          // Hier komt de nieuwe FBX handling code
-          if (file.extension === '.fbx') {
-            try {
-              object = await validateAndLoadFBX(file, loaderMap[file.extension]);
-            } catch (error) {
-              console.error(`FBX loading failed for ${file.name}:`, error);
-              alert(`Het bestand ${file.name} lijkt beschadigd te zijn. Probeer het bestand opnieuw te exporteren met de volgende instellingen:\n\n` +
-                    '1. Exporteer als FBX 2013 Binary\n' +
-                    '2. Schakel "Geometrie compressie" uit\n' +
-                    '3. Vink "Embed media" uit\n' +
-                    '4. Gebruik ASCII formaat als Binary niet werkt');
-              continue;
-            }
-          } else {
-            // Bestaande code voor andere bestandsformaten
-            object = await new Promise((resolve, reject) => {
-              loaderMap[file.extension].load(
-                file.url,
-                (loadedObject) => resolve(loadedObject),
-                (progress) => {
-                  const progressPercentage = (progress.loaded / progress.total) * 100;
-                  updateLoadingProgress(file.name, progressPercentage);
-                },
-                (error) => reject(error)
-              );
-            });
+          if (file.size > 100) { // 100MB limit
+            console.warn(`File ${file.name} is te groot (${Math.round(file.size)}MB)`);
+            alert(`Let op: ${file.name} is te groot om te laden (${Math.round(file.size)}MB). ` +
+                  `De maximale bestandsgrootte is 100MB. \n\n` +
+                  `Het bestand is wel opgeslagen maar kan niet worden weergegeven. ` +
+                  `Neem contact op met de toezichthouder voor een geoptimaliseerde versie.`);
+            continue;
           }
-  
-          if (object) {
-            loadedObjects[file.name] = object;
-  
-            if (filesList[0] === "Geen objecten beschikbaar") {
-              filesList.shift();
+
+          updateLoadingProgress(file.name, 0);
+
+          const object = await new Promise((resolve, reject) => {
+            const loader = loaderMap[file.extension];
+            
+            // Add error checking for FBX files
+            if (file.extension === '.fbx') {
+              loader.setPath('');
+              loader.setResourcePath('');
             }
-            filesList.push(file.name);
-            selection.options(filesList);
   
-            if (!currentObject) {
-              currentObject = object;
-              scene.add(currentObject);
-            }
+            loader.load(
+              file.url,
+              (loadedObject) => {
+                if (!loadedObject) {
+                  reject(new Error(`Loaded object is null for ${file.name}`));
+                  return;
+                }
+                console.log("Loader succeeded:", loadedObject);
+                resolve(loadedObject);
+              },
+              (progress) => {
+                const progressPercentage = (progress.loaded / progress.total) * 100;
+                updateLoadingProgress(file.name, progressPercentage);
+              },
+              (error) => {
+                console.error(`Error in loader for ${file.name}:`, error);
+                reject(error);
+              }
+            );
+          });
+  
+          console.log(`Successfully loaded: ${file.name}`);
+          loadedObjects[file.name] = object;
+  
+          if (filesList[0] === "Geen objecten beschikbaar") {
+            filesList.shift();
+          }
+          filesList.push(file.name);
+          selection.options(filesList);
+  
+          if (!currentObject) {
+            currentObject = object;
+            scene.add(currentObject);
           }
   
         } catch (error) {
           console.error(`Failed to load object: ${file.name}`, error);
+          // Continue with other files even if one fails
         }
       }
     } catch (error) {
@@ -277,7 +249,7 @@ export function createScene1(scene, camera, renderer, gui, controls) {
   }
   animate();
 
-// Functie om de loading screen te tonen
+  // Functie om de loading screen te tonen
 function showLoadingScreen() {
   const loadingScreen = document.getElementsByClassName("loadingContainer")[0];
   if (loadingScreen) {
@@ -300,7 +272,7 @@ function updateLoadingProgress(filename, progress) {
   
   if (progressBar && progressText && filenameElement) {
     progressBar.style.width = `${progress}%`;
-    progressText.textContent = Math.round(progress);
+    progressText.textContent = Math.round(progress * 100) / 100;
     filenameElement.textContent = filename;
   }
 }
