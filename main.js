@@ -16,9 +16,6 @@ export function initScene() {
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enabled = false;
     controls.enableDamping = true;
-
-
-
     
     // Render the initial scene with the light gray background
     renderer.render(scene, camera);
@@ -61,7 +58,7 @@ export async function loadScene(sceneId) {
     switch(sceneId) {
         case 'Fotos':
             const { createScene0 } = await import('./scenes/Fotos.js');
-            createScene0(scene, camera, renderer, gui, fileInput);
+            createScene0(scene, camera, renderer, gui);
             break;
         case 'Objects':
             const { createScene1 } = await import('./scenes/Objects.js');
@@ -69,7 +66,7 @@ export async function loadScene(sceneId) {
             break;
         case 'Panoramas':
             const { createScene2 } = await import('./scenes/Panoramas.js');
-            createScene2(scene, camera, renderer, gui, fileInput, controls);
+            createScene2(scene, camera, renderer, gui, controls);
             break;
         case 'Pointcloud':
             const { createScene3 } = await import('./scenes/Pointcloud.js');

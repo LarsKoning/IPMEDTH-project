@@ -16,29 +16,15 @@ export function createScene0(scene, camera, renderer, gui) {
             name: itemRef.name,
             url
           }));
-        });
-        console.log(promises);
-        
+        });        
   
         // Wait for all download URLs to be resolved
         Promise.all(promises).then((files) => {
           // Sort files by name in ascending order
           files.sort((a, b) => a.name.localeCompare(b.name));
-          console.log(files);
           
-  
           // Add sorted files to the GUI
           files.forEach((file, index) => {
-            console.log(`Loaded photo: ` + file);
-            
-  
-            // Create the media viewer folder if it doesn't exist
-            if (!mediaViewerFolder) {
-              mediaViewerFolder = gui.addFolder("Photo's");
-              const folderElement = mediaViewerFolder.domElement;
-              folderElement.id = "photosFolder";
-            }
-    
             // Add the image to the GUI with a click handler
             const elementController = mediaViewerFolder.add(
               { [file.name]: () => selectImage(file) },
@@ -177,12 +163,9 @@ export function createScene0(scene, camera, renderer, gui) {
   // Mediaviewer-folder
   var mediaViewerFolder = gui.addFolder("Galerij");
   const folderElement = mediaViewerFolder.domElement;
-
   folderElement.classList.add("photosFolder");
 
   function displayImageInScene(fileURL) {
-    console.log(`Weergegeven afbeelding: ${fileURL}`);
-    
     // Reset de canvas en verwijder oude objecten
     while (scene.children.length > 0) {
       const object = scene.children[0];
@@ -230,8 +213,6 @@ export function createScene0(scene, camera, renderer, gui) {
   }
 
   function selectImage(file) {
-    console.log(`Geselecteerde foto: ${file.url}`);
-
     currentFile = file; // Update currentFile
     applyAdjustments(); // Pas de instellingen toe op de geselecteerde afbeelding
 

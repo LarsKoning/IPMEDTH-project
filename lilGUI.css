@@ -143,7 +143,8 @@ input {
 }
 
 .lil-gui .photosFolder {
-  max-height: 40rem;
+  min-height: 40rem;
+  max-height: 50vh;
   overflow-y: auto;
 }
 
