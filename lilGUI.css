@@ -134,28 +134,33 @@ input {
 }
 
 /* Foto's map */
+
 .lil-gui .controller.function {
-  background-size: cover;
+  margin: 1rem;
+
+  border-radius: 1rem;
   background-repeat: no-repeat;
   background-position: center;
-  border-radius: 1rem;
-  margin: 1rem;
+  background-size: cover;
 }
 
 .lil-gui .photosFolder {
+  overflow-y: auto;
+
   min-height: 40rem;
   max-height: 50vh;
-  overflow-y: auto;
 }
 
 .lil-gui .photosFolder .title {
   position: sticky;
+  z-index: 2;
   top: 0;
-  background-color: #f0f0f0;
+
   width: 100%;
   margin: 0;
   padding: 0 25px;
-  z-index: 2;
+
+  background-color: #f0f0f0;
 }
 
 .lil-gui .photosFolder::-webkit-scrollbar {
@@ -163,8 +168,8 @@ input {
 }
 
 .lil-gui .photosFolder::-webkit-scrollbar-thumb {
-  background-color: #888;
   border-radius: 4px;
+  background-color: #888;
 }
 
 .lil-gui .photosFolder::-webkit-scrollbar-thumb:hover {
@@ -187,4 +192,19 @@ input {
   color: #0d275e;
   border: 0.2rem solid #0d275e;
   background: none;
+}
+
+/* Style for the reset buttons */
+
+.lil-gui .reset-buttons-container {
+  display: flex;
+  justify-content: space-around;
+}
+
+.lil-gui .reset-button {
+  max-width: 40%;
+}
+
+.lil-gui .reset-buttons-container .controller.function .widget button {
+  padding: 2rem 7rem;
 }
