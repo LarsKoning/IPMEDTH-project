@@ -133,6 +133,17 @@ input {
   text-align: center;
 }
 
+/* Plattegrond */
+.plattegrond {
+  width: 20rem;
+  height: 20rem;
+}
+
+.lil-gui .plattegrondImg {
+  width: 100%;
+  height: 100%;
+}
+
 /* Foto's map */
 .lil-gui .controller.function {
   background-size: cover;
