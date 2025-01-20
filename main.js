@@ -1,106 +1,109 @@
-import GUI from 'lil-gui';
+import GUI from "lil-gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
-
 
 let scene, camera, renderer, currentAnimation, gui, fileInput, controls;
 
 export function initScene() {
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xE6E6E6);
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-    camera.position.z = 5;
-    addLights();
-    controls = new OrbitControls(camera, renderer.domElement);
-    controls.enabled = false;
-    controls.enableDamping = true;
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xe6e6e6);
+  camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+  );
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+  camera.position.z = 5;
+  addLights();
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enabled = false;
+  controls.enableDamping = true;
 
-
-
-    
-    // Render the initial scene with the light gray background
-    renderer.render(scene, camera);
+  // Render the initial scene with the light gray background
+  renderer.render(scene, camera);
 }
 
 function addLights() {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-    
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    directionalLight.position.set(5, 5, 5);
-    scene.add(directionalLight);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambientLight);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  directionalLight.position.set(5, 5, 5);
+  scene.add(directionalLight);
 }
 
 export async function loadScene(sceneId) {
-    // Clear previous scene
-    while(scene.children.length > 0) { 
-        scene.remove(scene.children[0]); 
-    }
-    if(currentAnimation) {
-        cancelAnimationFrame(currentAnimation);
-    }
-    addLights();
+  // Clear previous scene
+  while (scene.children.length > 0) {
+    scene.remove(scene.children[0]);
+  }
+  if (currentAnimation) {
+    cancelAnimationFrame(currentAnimation);
+  }
+  addLights();
 
-    // Initiate GUI
-    gui = new GUI();
-    gui.title("Settings menu");
+  // Initiate GUI
+  gui = new GUI();
+  gui.title("Settings menu");
 
-    // Create a hidden file input
-    fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.style.display = 'none';
-    document.body.appendChild(fileInput);
+  // Create a hidden file input
+  fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.style.display = "none";
+  document.body.appendChild(fileInput);
 
-    // Hide menu and show back button
-    document.getElementById('menu').style.display = 'none';
-    document.getElementById('backButton').style.display = 'block';
+  // Hide menu and show back button
+  document.getElementById("menu").style.display = "none";
+  document.getElementById("backButton").style.display = "block";
+  document.getElementById("plattegrond").style.display = "none";
 
-    // Dynamically import and load the scene
-    switch(sceneId) {
-        case 'Fotos':
-            const { createScene0 } = await import('./scenes/Fotos.js');
-            createScene0(scene, camera, renderer, gui, fileInput);
-            break;
-        case 'Objects':
-            const { createScene1 } = await import('./scenes/Objects.js');
-            createScene1(scene, camera, renderer, gui, fileInput, controls);
-            break;
-        case 'Panoramas':
-            const { createScene2 } = await import('./scenes/Panoramas.js');
-            createScene2(scene, camera, renderer, gui, fileInput, controls);
-            break;
-        case 'Pointcloud':
-            const { createScene3 } = await import('./scenes/Pointcloud.js');
-            createScene3(scene, camera, renderer, gui, fileInput);
-            break;
-    }
+  // Dynamically import and load the scene
+  switch (sceneId) {
+    case "Fotos":
+      const { createScene0 } = await import("./scenes/Fotos.js");
+      createScene0(scene, camera, renderer, gui, fileInput);
+      break;
+    case "Objects":
+      const { createScene1 } = await import("./scenes/Objects.js");
+      createScene1(scene, camera, renderer, gui, fileInput, controls);
+      break;
+    case "Panoramas":
+      const { createScene2 } = await import("./scenes/Panoramas.js");
+      createScene2(scene, camera, renderer, gui, fileInput, controls);
+      break;
+    case "Pointcloud":
+      const { createScene3 } = await import("./scenes/Pointcloud.js");
+      createScene3(scene, camera, renderer, gui, fileInput);
+      break;
+  }
 }
 
 export function showMenu() {
-    if(currentAnimation) {
-        cancelAnimationFrame(currentAnimation);
-    }
+  if (currentAnimation) {
+    cancelAnimationFrame(currentAnimation);
+  }
 
-    while(scene.children.length > 0) { 
-        scene.remove(scene.children[0]); 
-        gui.destroy();
-        fileInput.remove();
+  while (scene.children.length > 0) {
+    scene.remove(scene.children[0]);
+    gui.destroy();
+    fileInput.remove();
 
-        controls.reset();
-        controls.enabled = false;
-    }
+    controls.reset();
+    controls.enabled = false;
+  }
 
-    document.getElementById('menu').style.display = 'flex';
-    document.getElementById('backButton').style.display = 'none';
-    addLights();
+  document.getElementById("menu").style.display = "flex";
+  document.getElementById("backButton").style.display = "none";
+  document.getElementById("plattegrond").style.display = "flex";
+  addLights();
 
-    renderer.render(scene, camera);
+  renderer.render(scene, camera);
 }
 
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
 });
