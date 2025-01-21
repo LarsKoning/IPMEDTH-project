@@ -134,6 +134,7 @@ input {
 }
 
 /* Plattegrond */
+
 .plattegrond {
   width: 20rem;
   height: 20rem;
@@ -207,9 +208,13 @@ input {
 
 /* Style for the reset buttons */
 
-.lil-gui .reset-buttons-container {
+.lil-gui .reset-buttons-container .children {
   display: flex;
   justify-content: space-around;
+}
+
+.lil-gui .reset-buttons-container .title {
+  display: none;
 }
 
 .lil-gui .reset-button {
