@@ -36,7 +36,7 @@ function addLights() {
 
 export async function loadScene(sceneId) {
   // Clear previous scene
-  while (scene.children.length > 0) {
+  while(scene.children.length > 0) {
     scene.remove(scene.children[0]);
   }
   if (currentAnimation) {
@@ -79,7 +79,7 @@ export function showMenu() {
     cancelAnimationFrame(currentAnimation);
   }
 
-  while (scene.children.length > 0) {
+  while(scene.children.length > 0) {
     scene.remove(scene.children[0]);
     gui.destroy();
 
