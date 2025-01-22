@@ -145,25 +145,23 @@ export function createScene0(scene, camera, renderer, gui) {
   }
 
   // Initialize GUI
-  const editing = gui.addFolder("Bewerkings opties");
+  
 
-  // Create a div for reset buttons
-  const resetButtonsContainer = document.createElement('div');
-  resetButtonsContainer.className = 'reset-buttons-container';
-  editing.domElement.insertBefore(resetButtonsContainer, editing.domElement.firstChild);
+  const resetFolder = gui.addFolder("");
+  const resetElement = resetFolder.domElement;
+  resetElement.classList.add("reset-buttons-container");
 
   // Add reset buttons with custom styling
-  const resetCurrentController = editing.add({ resetCurrent: resetCurrentImage }, 'resetCurrent')
+  const resetCurrentController = resetFolder.add({ resetCurrent: resetCurrentImage }, 'resetCurrent')
     .name('Reset deze afbeelding');
   resetCurrentController.domElement.classList.add('reset-button');
-  resetButtonsContainer.appendChild(resetCurrentController.domElement);
 
-  const resetAllController = editing.add({ resetAll: clearAllSettings }, 'resetAll')
+  const resetAllController = resetFolder.add({ resetAll: clearAllSettings }, 'resetAll')
     .name('Reset alle afbeeldingen');
   resetAllController.domElement.classList.add('reset-button');
-  resetButtonsContainer.appendChild(resetAllController.domElement);
 
   // Store controller references when creating them
+  const editing = gui.addFolder("Bewerkings opties");
   controllers.exposure = editing
     .add(settings, "exposure", -100, 100)
     .name("Helderheid")
@@ -181,6 +179,10 @@ export function createScene0(scene, camera, renderer, gui) {
     .name("Schaduwen")
     .onChange(applyAdjustments)
     .onFinishChange(saveSettings);
+
+    var mediaViewerFolder = gui.addFolder("Galerij");
+    const folderElement = mediaViewerFolder.domElement;
+    folderElement.classList.add("photosFolder");
 
   function applyAdjustments() {
     if (!currentFile || !currentContext) return;
@@ -241,10 +243,6 @@ export function createScene0(scene, camera, renderer, gui) {
     }
     return Math.min(Math.max(newValue, 0), 255);
   }
-
-  var mediaViewerFolder = gui.addFolder("Galerij");
-  const folderElement = mediaViewerFolder.domElement;
-  folderElement.classList.add("photosFolder");
 
   function displayImageInScene(fileURL) {
     while (scene.children.length > 0) {
