@@ -1,5 +1,6 @@
 import GUI from "lil-gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
+import { VRButton } from 'three/addons/webxr/VRButton.js';
 
 let scene, camera, renderer, currentAnimation, gui, controls;
 
@@ -23,6 +24,8 @@ export function initScene() {
 
   // Render the initial scene with the light gray background
   renderer.render(scene, camera);
+  document.body.appendChild( VRButton.createButton( renderer ) );
+  renderer.xr.enabled = true;
 }
 
 function addLights() {
@@ -100,3 +103,4 @@ window.addEventListener("resize", () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
