@@ -102,7 +102,7 @@ function onExitVR() {
 	console.log("Exiting VR mode");
 
 	inVR = false;
-	controls.enabled = false;
+	showMenu();
 
 	// Set up container for non-VR (site) mode
 	const distance = -2;
