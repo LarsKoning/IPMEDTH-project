@@ -1,202 +1,345 @@
 import {
-  FBXLoader,
-  GLTFLoader,
-  OrbitControls,
-  STLLoader,
-  OBJLoader,
+	FBXLoader,
+	GLTFLoader,
+	STLLoader,
+	OBJLoader,
 } from "three/examples/jsm/Addons.js";
+import { getDownloadURL, listAll, getMetadata } from "firebase/storage";
+import { objectsRef } from "../API.js";
 
+export function createScene1(scene, camera, renderer, gui, controls) {
+	controls.enabled = true;
 
-export function createScene1(scene, camera, renderer, gui, fileInput, controls) {
-  controls.enabled = true
+	const loaderMap = {
+		".obj": new OBJLoader(),
+		".glb": new GLTFLoader(),
+		".fbx": new FBXLoader(),
+		".stl": new STLLoader(),
+	};
 
-  // Map of loaders for different file formats
-  const loaderMap = {
-    ".obj": new OBJLoader(),
-    ".glb": new GLTFLoader(),
-    ".fbx": new FBXLoader(),
-    ".stl": new STLLoader(),
-  };
+	const filesList = ["Geen objecten beschikbaar"];
+	const loadedObjects = {}; // To store loaded objects
+	const objectSettings = {}; // To store settings for each object
+	let currentObject = null;
 
-  const filesList = [];
-  const loadedObjects = {}; // To store loaded objects
-  let currentObject = null; // Track currently displayed object
+	// Create a settings object that will be used by lil-gui
+	const settings = {
+		selectedObject: "Geen objecten beschikbaar",
+		positionX: 0,
+		positionY: 0.5,
+		positionZ: 0,
+		rotationX: 0,
+		rotationY: 0,
+		rotationZ: 0,
+		castShadow: false,
+		receiveShadow: false,
+		autoRotate: false,
+		rotationSpeed: 0.01,
+		color: "#FFFFFF",
+	};
 
-  fileInput.accept = ".obj, .glb, .fbx, .stl";
-  fileInput.addEventListener("change", async (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      // Validate the file type
-      const fileExtension = await file.name
-        .slice(file.name.lastIndexOf("."))
-        .toLowerCase();
+	// Function to create default settings for an object
+	function createDefaultSettings() {
+		return {
+			positionX: 0,
+			positionY: 0.5,
+			positionZ: 0,
+			rotationX: 0,
+			rotationY: 0,
+			rotationZ: 0,
+			castShadow: false,
+			receiveShadow: false,
+			autoRotate: false,
+			rotationSpeed: 0.01,
+			color: "#FFFFFF",
+		};
+	}
 
-      if ([".obj", ".glb", ".fbx", ".stl"].includes(fileExtension)) {
-        console.log(`File uploaded: ${file.name}`);
-        const fileURL = URL.createObjectURL(file);
+	// Function to apply settings to GUI controllers
+	function applySettingsToGUI(settings) {
+		Object.entries(settings).forEach(([key, value]) => {
+			// Find and update the corresponding controller
+			for (const folder of gui.folders) {
+				const controller = folder.controllers.find((c) => c.property === key);
+				if (controller) {
+					controller.setValue(value);
+				}
+			}
+		});
+	}
 
-        try {
-          // Load object using appropriate loader
-          const object = await new Promise((resolve, reject) => {
-            loaderMap[fileExtension].load(
-              fileURL,
-              (loadedObjects) => resolve(loadedObjects),
-              undefined,
-              (error) => reject(error)
-            );
-          });
+	async function loadObjectsFromStorage() {
+		try {
+			showLoadingScreen();
 
-          loadedObjects[file.name] = object;
+			const result = await listAll(objectsRef);
+			const promises = result.items.map(async (itemRef) => {
+				const fileURL = await getDownloadURL(itemRef);
+				const fileExtension = itemRef.name
+					.slice(itemRef.name.lastIndexOf("."))
+					.toLowerCase();
+				const metadata = await getMetadata(itemRef);
+				const fileSizeInMB = metadata.size / (1024 * 1024);
 
-          // Remove placeholder if it's still in the list
-          if (filesList[0] === "Upload an object first") {
-            filesList.shift();
-          }
+				return {
+					name: itemRef.name,
+					url: fileURL,
+					extension: fileExtension,
+					size: fileSizeInMB,
+				};
+			});
 
-          // Automatically display the uploaded object
-          if (currentObject) {
-            scene.remove(currentObject);
-          }
-          currentObject = object;
-          scene.add(currentObject);
-          selection.setValue(file.name); // Update dropdown to reflect current object
+			const files = await Promise.all(promises);
+			const supportedFiles = files.filter((file) =>
+				[".obj", ".glb", ".fbx", ".stl"].includes(file.extension)
+			);
 
-          filesList.push(file.name);
-          selection.options(filesList);
-          alert(`Successfully loaded: ${file.name}`);
-        } catch (error) {
-          alert(`Error loading file: ${file.name}`);
-          console.error(error);
-        }
-      } else {
-        alert(
-          "Invalid file type. Please upload a .obj, .glb, .fbx or .stl file."
-        );
-      }
-    }
-  });
+			if (supportedFiles.length === 0) {
+				alert("Geen 3D objecten beschikbaar");
+				hideLoadingScreen();
+				return;
+			}
 
-  // Define settings for GUI
-  const settings = {
-    upload: function () {
-      fileInput.click();
-    },
-    select: "Select",
-    positionX: 0,
-    positionY: 0,
-    positionZ: 0,
-    rotationX: 0,
-    rotationY: 0,
-    rotationZ: 0,
-    castShadow: false,
-    receiveShadow: false,
-    autoRotate: false,
-    rotationSpeed: 0.01,
-    color: "#FFFFFF",
-  };
+			// Clear the initial "Geen objecten beschikbaar" entry once we have files
+			filesList.length = 0;
 
-  // Initiate the settings and put in folders (IN ORDER FROM TOP TO BOTTOM)
-  // File management
-  gui.add(settings, "upload").name("Upload 3D object");
-  let selection = gui
-    .add(settings, "select", filesList)
-    .name("Select 3D object");
+			for (const file of supportedFiles) {
+				try {
+					if (file.size > 100) {
+						console.warn(
+							`File ${file.name} is te groot (${Math.round(file.size)}MB)`
+						);
+						alert(
+							`Let op: ${file.name} is te groot om te laden (${Math.round(
+								file.size
+							)}MB). ` +
+								`De maximale bestandsgrootte is 100MB. \n\n` +
+								`Het bestand is wel opgeslagen maar kan niet worden weergegeven. ` +
+								`Neem contact op met de toezichthouder voor een geoptimaliseerde versie.`
+						);
+						continue;
+					}
 
-  // TODO: Reset gui when new model is loaded
-  selection.onChange((selectedName) => {
-    if (loadedObjects[selectedName]) {
-      // Remove current object from the scene
-      if (currentObject) {
-        scene.remove(currentObject);
-      }
+					updateLoadingProgress(file.name, 0);
 
-      // Add the selected object to the scene
-      currentObject = loadedObjects[selectedName];
-      scene.add(currentObject);
+					const object = await new Promise((resolve, reject) => {
+						const loader = loaderMap[file.extension];
 
-      const box = new THREE.Box3();
-      currentObject.traverse((child) => {
-        if (child.isMesh) {
-          box.expandByObject(child);
-        }
-      });
+						if (file.extension === ".fbx") {
+							loader.setPath("");
+							loader.setResourcePath("");
+						}
 
-      if (!box.isEmpty()) {
-        const size = new THREE.Vector3();
-        const center = new THREE.Vector3();
+						loader.load(
+							file.url,
+							(loadedObject) => {
+								if (!loadedObject) {
+									reject(new Error(`Loaded object is null for ${file.name}`));
+									return;
+								}
+								resolve(loadedObject);
+							},
+							(progress) => {
+								const progressPercentage =
+									(progress.loaded / (file.size * (1024 * 1024))) * 100;
 
-        box.getSize(size);
-        box.getCenter(center);
+								updateLoadingProgress(file.name, progressPercentage);
+							},
+							(error) => {
+								console.error(`Error in loader for ${file.name}:`, error);
+								reject(error);
+							}
+						);
+					});
 
-        const maxDimension = Math.max(size.x, size.y, size.z);
-        const desiredSize = 2;
-        const scaleFactor = desiredSize / maxDimension;
+					console.log(`Successfully loaded: ${file.name}`);
+					loadedObjects[file.name] = object;
+					objectSettings[file.name] = createDefaultSettings();
+					filesList.push(file.name);
 
-        currentObject.scale.set(scaleFactor, scaleFactor, scaleFactor);
+					// If this is the first object loaded
+					if (!currentObject) {
+						currentObject = object;
+						scene.add(currentObject);
+						settings.selectedObject = file.name; // Update the settings object
+						selectionController.updateDisplay(); // Update the GUI display
 
-        currentObject.position.x = 0;
-        currentObject.position.y = 0.5;
-      }
-    }
-  });
+						// Apply initial settings
+						applySettingsToGUI(objectSettings[file.name]);
+					}
+				} catch (error) {
+					console.error(`Failed to load object: ${file.name}`, error);
+				}
+			}
 
-  // Position, Rotation and Scale
-  const position = gui.addFolder("Positie en aanpassingen");
-  position
-    .add(settings, "positionX", -10, 10)
-    .name("Links - Rechts")
-    .onChange(() => {
-      if (currentObject) currentObject.position.x = settings.positionX;
-    });
-  position
-    .add(settings, "positionY", -10, 10)
-    .name("Omlaag - Omhaag")
-    .onChange(() => {
-      if (currentObject) currentObject.position.y = settings.positionY;
-    });
-  position
-    .add(settings, "positionZ", -10, 10)
-    .name("Zoom")
-    .onChange(() => {
-      if (currentObject) currentObject.position.z = settings.positionZ;
-    });
-  position
-    .add(settings, "rotationY", 0, Math.PI * 2)
-    .name("Draaien")
-    .onChange(() => {
-      if (currentObject) currentObject.rotation.y = settings.rotationY;
-    });
+			// Update the selection controller with the new file list
+			selectionController.options(filesList);
+		} catch (error) {
+			console.error("Error fetching objects from Firebase Storage:", error);
+			alert("Probleem bij het laden van 3D objecten.");
+		} finally {
+			hideLoadingScreen();
+		}
+	}
 
-  // Lighting and Shadows
-  // TODO: Lighting isn't right yet
-  const lighting = gui.addFolder("Belichting");
-  // lighting.add(settings, 'castShadow').name('Schaduw omgeving').onChange(() => { if (currentObject) {currentObject.traverse((child) => { if (child.isMesh) { child.castShadow = settings.castShadow }}) }});
-  // lighting.add(settings, 'receiveShadow').name('Schaduw object').onChange(() => { if (currentObject) {currentObject.traverse((child) => { if (child.isMesh) { child.receiveShadow = settings.receiveShadow }}) }});
-  // lighting.addColor(settings, 'color').name('Kleur licht').onChange(() => { hemiLight.color.set(settings.color); dirLight.color.set(settings.color) });
+	// Initialize GUI
+	const selectionController = gui
+		.add(settings, "selectedObject", filesList)
+		.name("Select 3D object");
 
-  // Animations
-  const animations = gui.addFolder("Animaties");
-  animations.add(settings, "autoRotate").name("Automatisch draaien");
-  animations.add(settings, "rotationSpeed", 0, 0.1).name("Draai snelheid");
+	selectionController.onChange((selectedName) => {
+		if (loadedObjects[selectedName]) {
+			// Store current object's settings
+			if (currentObject) {
+				const currentName = settings.selectedObject;
+				objectSettings[currentName] = {
+					positionX: settings.positionX,
+					positionY: settings.positionY,
+					positionZ: settings.positionZ,
+					rotationX: settings.rotationX,
+					rotationY: settings.rotationY,
+					rotationZ: settings.rotationZ,
+					autoRotate: settings.autoRotate,
+					rotationSpeed: settings.rotationSpeed,
+					color: settings.color,
+				};
+				scene.remove(currentObject);
+			}
 
-  // TODO: Reset button, save states bij switchen?
+			// Add the selected object to the scene
+			currentObject = loadedObjects[selectedName];
+			scene.add(currentObject);
 
-  var inputs = document.getElementsByTagName("input");
+			// Load stored settings for the selected object
+			const storedSettings = objectSettings[selectedName];
+			if (storedSettings) {
+				// Update the settings object
+				Object.assign(settings, storedSettings);
+				// Apply settings to GUI
+				applySettingsToGUI(storedSettings);
+			}
 
-  for (var i = 0; i < inputs.length; i++) {
-    if (inputs[i].type.toLocaleLowerCase() == "checkbox") {
-      const span = document.createElement("span");
-      span.classList.add("slider");
-      inputs[i].parentElement.appendChild(span);
-    }
-  }
+			// Handle scaling
+			const box = new THREE.Box3();
+			currentObject.traverse((child) => {
+				if (child.isMesh) {
+					box.expandByObject(child);
+				}
+			});
 
-  function animate() {
-    if (settings.autoRotate && currentObject) {
-      currentObject.rotation.y += settings.rotationSpeed;
-    }
-    renderer.render(scene, camera);
-    requestAnimationFrame(animate);
-  }
-  animate();
+			if (!box.isEmpty()) {
+				const size = new THREE.Vector3();
+				box.getSize(size);
+				const maxDimension = Math.max(size.x, size.y, size.z);
+				const desiredSize = 2;
+				const scaleFactor = desiredSize / maxDimension;
+				currentObject.scale.set(scaleFactor, scaleFactor, scaleFactor);
+			}
+		}
+	});
+
+	// Position controls
+	const position = gui.addFolder("Positie en aanpassingen");
+	position
+		.add(settings, "positionX", -10, 10)
+		.name("Links - Rechts")
+		.onChange(() => {
+			if (currentObject) {
+				currentObject.position.x = settings.positionX;
+				objectSettings[settings.selectedObject].positionX = settings.positionX;
+			}
+		});
+
+	position
+		.add(settings, "positionY", -10, 10)
+		.name("Omlaag - Omhaag")
+		.onChange(() => {
+			if (currentObject) {
+				currentObject.position.y = settings.positionY;
+				objectSettings[settings.selectedObject].positionY = settings.positionY;
+			}
+		});
+
+	position
+		.add(settings, "positionZ", -10, 10)
+		.name("Zoom")
+		.onChange(() => {
+			if (currentObject) {
+				currentObject.position.z = settings.positionZ;
+				objectSettings[settings.selectedObject].positionZ = settings.positionZ;
+			}
+		});
+
+	position
+		.add(settings, "rotationY", 0, Math.PI * 2)
+		.name("Draaien")
+		.onChange(() => {
+			if (currentObject) {
+				currentObject.rotation.y = settings.rotationY;
+				objectSettings[settings.selectedObject].rotationY = settings.rotationY;
+			}
+		});
+
+	// Animation controls
+	const animations = gui.addFolder("Animaties");
+	animations
+		.add(settings, "autoRotate")
+		.name("Automatisch draaien")
+		.onChange(() => {
+			if (currentObject) {
+				objectSettings[settings.selectedObject].autoRotate =
+					settings.autoRotate;
+			}
+		});
+
+	animations
+		.add(settings, "rotationSpeed", 0, 0.1)
+		.name("Draai snelheid")
+		.onChange(() => {
+			if (currentObject) {
+				objectSettings[settings.selectedObject].rotationSpeed =
+					settings.rotationSpeed;
+			}
+		});
+
+	// Start loading objects
+	loadObjectsFromStorage();
+
+	function animate() {
+		if (currentObject && settings.autoRotate) {
+			currentObject.rotation.y += settings.rotationSpeed;
+		}
+		renderer.render(scene, camera);
+		requestAnimationFrame(animate);
+	}
+	animate();
+
+	// Helper functions
+	function showLoadingScreen() {
+		const loadingScreen =
+			document.getElementsByClassName("loadingContainer")[0];
+		if (loadingScreen) {
+			loadingScreen.style.display = "flex";
+		}
+	}
+
+	function hideLoadingScreen() {
+		const loadingScreen =
+			document.getElementsByClassName("loadingContainer")[0];
+		if (loadingScreen) {
+			loadingScreen.style.display = "none";
+		}
+	}
+
+	function updateLoadingProgress(filename, progress) {
+		const progressBar = document.getElementById("loading-progress");
+		const progressText = document.getElementById("progress-percentage");
+		const filenameElement = document.getElementById("loading-filename");
+
+		if (progressBar && progressText && filenameElement) {
+			progressBar.style.width = `${progress}%`;
+			progressText.textContent = Math.round(progress * 100) / 100;
+			filenameElement.textContent = filename;
+		}
+	}
 }

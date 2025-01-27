@@ -1,127 +1,195 @@
-export function createScene0(scene, camera, renderer, gui, fileInput) {
-  const filesList = [];
+import { getDownloadURL, listAll } from "firebase/storage";
+import { imagesRef } from "../API.js";
+
+export function createScene0(scene, camera, renderer, gui) {
   let currentImage = null;
   let currentCanvas = document.createElement("canvas");
   let currentContext = currentCanvas.getContext("2d");
   let currentFile = null;
+  let controllers = {};
 
-  // Voeg een bestand toe aan de lijst en toon het in de mediaviewer
-  async function addFile(file) {
-    const fileURL = URL.createObjectURL(file);
-    filesList.push({ name: file.name, url: fileURL });
-    updateMediaViewer();
-  }
-
-  function updateMediaViewer() {
-    // Controleer of de folder al bestaat; maak deze indien nodig
-    if (!mediaViewerFolder) {
-      mediaViewerFolder = gui.addFolder("Photo's");
-      const folderElement = mediaViewerFolder.domElement;
-      folderElement.id = "photosFolder";
-    }
-
-    const index = filesList.length - 1;
-
-    const propertyName = `Foto ${index}`;
-
-    // Voeg de afbeelding toe aan de GUI
-    const elementController = mediaViewerFolder.add(
-      { [propertyName]: () => selectImage(index) },
-      propertyName,
-      console.log(filesList),
-      console.log(index)
-    );
-
-    // Voeg nieuwe items toe uit filesList
-    filesList.forEach((file) => {
-      elementController.name(file.name);
-      // Voeg een thumbnail toe
-      const thumbnail = document.createElement("img");
-      thumbnail.src = file.url;
-
-      // Event listener voor het selecteren van een afbeelding
-      thumbnail.addEventListener("click", () => {
-        selectImage(index);
-        highlightThumbnail(thumbnail);
-      });
-
-      // Voeg visuele thumbnail toe aan het element in de GUI
-      const domElement = elementController.domElement;
-      domElement.style.backgroundImage = `url(${file.url})`;
-
-      // console.log(filesList);
-    });
-  }
-
-  // Highlight geselecteerde thumbnail
-  function highlightThumbnail(selectedThumbnail) {
-    const allThumbnails = document.querySelectorAll("img");
-    allThumbnails.forEach(
-      (img) => (img.style.border = "2px solid transparent")
-    );
-    selectedThumbnail.style.border = "2px solid #00f";
-  }
-
-  // Selecteer een afbeelding en toon deze
-  function selectImage(index) {
-    const file = filesList[index];
-    console.log(`Geselecteerde foto: ${file.name}`);
-
-    if (!currentImage) {
-      currentImage = document.createElement("img");
-      // currentImage.style.position = "absolute";
-      // currentImage.style.top = "10px";
-      // currentImage.style.right = "10px";
-      // currentImage.style.width = "300px";
-      // currentImage.style.border = "2px solid #fff";
-      document.body.appendChild(currentImage);
-    }
-
-    currentImage.src = file.url;
-  }
-
-  // Bestand uploaden via de fileInput
-  fileInput.accept = ".jpg, .jpeg, .png, .webp";
-  fileInput.addEventListener("change", async (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const fileExtension = file.name
-        .slice(file.name.lastIndexOf("."))
-        .toLowerCase();
-      if ([".jpg", ".jpeg", ".png", ".webp"].includes(fileExtension)) {
-        console.log(`File uploaded: ${file.name}`);
-        await addFile(file);
-      } else {
-        alert(
-          "Invalid file type. Please upload a .jpg, .jpeg, .png or .webp file."
-        );
-      }
-    }
-  });
-
-  // GUI instellingen
-  const settings = {
-    upload: function () {
-      fileInput.click();
-    },
+  // Settings object with default values
+  const defaultSettings = {
     exposure: 0,
     highlights: 0,
     shadows: 0,
   };
 
-  // Initiëren van de GUI
-  gui.add(settings, "upload").name("Upload Foto's");
+  // Settings object for current state
+  const settings = {
+    exposure: 0,
+    highlights: 0,
+    shadows: 0,
+  };
 
-  // Bewerkingsopties-folder
+  // Function to reset all settings in localStorage
+  function clearAllSettings() {
+    // Get all keys from localStorage that start with 'imageSettings_'
+    Object.keys(localStorage)
+      .filter(key => key.startsWith('imageSettings_'))
+      .forEach(key => localStorage.removeItem(key));
+    
+    // Reset current settings to default
+    Object.keys(defaultSettings).forEach(key => {
+      settings[key] = defaultSettings[key];
+      if (controllers[key]) {
+        controllers[key].object[controllers[key].property] = defaultSettings[key];
+        controllers[key].updateDisplay();
+      }
+    });
+    
+    // If there's a current image, apply the reset settings
+    if (currentFile) {
+      applyAdjustments();
+    }
+  }
+
+  // Function to reset current image settings
+  function resetCurrentImage() {
+    if (!currentFile) return;
+    
+    // Remove settings from localStorage for current image
+    localStorage.removeItem(`imageSettings_${currentFile.name}`);
+    
+    // Reset current settings to default
+    Object.keys(defaultSettings).forEach(key => {
+      settings[key] = defaultSettings[key];
+      if (controllers[key]) {
+        controllers[key].object[controllers[key].property] = defaultSettings[key];
+        controllers[key].updateDisplay();
+      }
+    });
+    
+    applyAdjustments();
+  }
+
+  function saveSettings() {
+    if (!currentFile) return;
+    
+    const imageSettings = {
+      exposure: settings.exposure,
+      highlights: settings.highlights,
+      shadows: settings.shadows
+    };
+    
+    localStorage.setItem(`imageSettings_${currentFile.name}`, JSON.stringify(imageSettings));
+  }
+
+  function loadSettings(imageName) {
+    const savedSettings = localStorage.getItem(`imageSettings_${imageName}`);
+    if (savedSettings) {
+      const parsedSettings = JSON.parse(savedSettings);
+      
+      // Update each setting and its controller
+      Object.keys(parsedSettings).forEach(key => {
+        settings[key] = parsedSettings[key];
+        if (controllers[key]) {
+          controllers[key].object[controllers[key].property] = parsedSettings[key];
+          controllers[key].updateDisplay();
+        }
+      });
+    } else {
+      // Reset to defaults
+      Object.keys(settings).forEach(key => {
+        settings[key] = 0;
+        if (controllers[key]) {
+          controllers[key].object[controllers[key].property] = 0;
+          controllers[key].updateDisplay();
+        }
+      });
+    }
+  }
+
+  function loadImagesFromStorage() {
+    listAll(imagesRef)
+      .then((result) => {
+        const promises = result.items.map((itemRef) => {
+          return getDownloadURL(itemRef).then((url) => ({
+            name: itemRef.name,
+            url,
+          }));
+        });
+
+        Promise.all(promises).then((files) => {
+          files.sort((a, b) => a.name.localeCompare(b.name));
+
+          files.forEach((file) => {
+            const elementController = mediaViewerFolder.add(
+              { [file.name]: () => selectImage(file) },
+              file.name
+            );
+
+            const domElement = elementController.domElement;
+            domElement.style.backgroundImage = `url(${file.url})`;
+          });
+        });
+      })
+      .catch((error) => {
+        console.error("Error loading images from Firebase Storage:", error);
+      });
+  }
+
+  // Modified selectImage function to ensure proper order of operations
+  function selectImage(file) {
+    currentFile = file;
+    
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      loadSettings(file.name);
+      setTimeout(() => {
+        applyAdjustments();
+      }, 50);
+    };
+    img.src = file.url;
+  }
+
+  // Initialize GUI
+  
+
+  const resetFolder = gui.addFolder("");
+  const resetElement = resetFolder.domElement;
+  resetElement.classList.add("reset-buttons-container");
+
+  // Add reset buttons with custom styling
+  const resetCurrentController = resetFolder.add({ resetCurrent: resetCurrentImage }, 'resetCurrent')
+    .name('Reset deze afbeelding');
+  resetCurrentController.domElement.classList.add('reset-button');
+
+  const resetAllController = resetFolder.add({ resetAll: clearAllSettings }, 'resetAll')
+    .name('Reset alle afbeeldingen');
+  resetAllController.domElement.classList.add('reset-button');
+
+  // Store controller references when creating them
   const editing = gui.addFolder("Bewerkings opties");
+  controllers.exposure = editing
+    .add(settings, "exposure", -100, 100)
+    .name("Helderheid")
+    .onChange(applyAdjustments)
+    .onFinishChange(saveSettings);
 
-  // Hulpfunctie om de afbeelding aan te passen
+  controllers.highlights = editing
+    .add(settings, "highlights", -100, 100)
+    .name("Highlights")
+    .onChange(applyAdjustments)
+    .onFinishChange(saveSettings);
+
+  controllers.shadows = editing
+    .add(settings, "shadows", -100, 100)
+    .name("Schaduwen")
+    .onChange(applyAdjustments)
+    .onFinishChange(saveSettings);
+
+    var mediaViewerFolder = gui.addFolder("Galerij");
+    const folderElement = mediaViewerFolder.domElement;
+    folderElement.classList.add("photosFolder");
+
   function applyAdjustments() {
     if (!currentFile || !currentContext) return;
 
     const img = new Image();
+    img.crossOrigin = "anonymous";
     img.onload = () => {
-      // Reset het canvas en teken de originele afbeelding
       currentCanvas.width = img.width;
       currentCanvas.height = img.height;
       currentContext.drawImage(img, 0, 0);
@@ -134,109 +202,49 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
       );
       const data = imgData.data;
 
-      // Pas helderheid, highlights en schaduwen toe
       const exposureFactor = Math.pow(2, settings.exposure / 100);
       const highlightsFactor = settings.highlights / 100;
       const shadowsFactor = settings.shadows / 100;
 
       for (let i = 0; i < data.length; i += 4) {
-        // Pas de helderheid, highlights en schaduwen toe
         data[i] = adjustPixel(
           data[i],
           exposureFactor,
           highlightsFactor,
           shadowsFactor
-        ); // Rood
+        );
         data[i + 1] = adjustPixel(
           data[i + 1],
           exposureFactor,
           highlightsFactor,
           shadowsFactor
-        ); // Groen
+        );
         data[i + 2] = adjustPixel(
           data[i + 2],
           exposureFactor,
           highlightsFactor,
           shadowsFactor
-        ); // Blauw
+        );
       }
 
       currentContext.putImageData(imgData, 0, 0);
-
-      // Update de afbeelding in de Three.js-scène
       displayImageInScene(currentCanvas.toDataURL());
     };
 
-    img.src = currentFile.url; // Gebruik de originele afbeelding
+    img.src = currentFile.url;
   }
 
-  // Hulpfunctie om een pixelwaarde aan te passen
   function adjustPixel(value, exposure, highlights, shadows) {
-    let newValue = value * exposure; // Pas helderheid toe
+    let newValue = value * exposure;
     if (newValue > 128) {
-      newValue += highlights * (255 - newValue); // Highlights
+      newValue += highlights * (255 - newValue);
     } else {
-      newValue += shadows * newValue; // Shadows
+      newValue += shadows * newValue;
     }
-    return Math.min(Math.max(newValue, 0), 255); // Houd de waarde binnen het bereik 0-255
+    return Math.min(Math.max(newValue, 0), 255);
   }
-
-  // Voeg eventlisteners toe aan de sliders
-  editing
-    .add(settings, "exposure", -100, 100)
-    .name("Helderheid")
-    .onChange(applyAdjustments);
-  editing
-    .add(settings, "highlights", -100, 100)
-    .name("Highlights")
-    .onChange(applyAdjustments);
-  editing
-    .add(settings, "shadows", -100, 100)
-    .name("Schaduwen")
-    .onChange(applyAdjustments);
-
-  // Mediaviewer-folder
-  var mediaViewerFolder = gui.addFolder("Galerij");
-  const folderElement = mediaViewerFolder.domElement;
-  folderElement.id = "photosFolder";
 
   function displayImageInScene(fileURL) {
-    // Reset de canvas en verwijder oude objecten
-    resetCanvas();
-
-    // Maak een nieuw Image object om de originele afmetingen van de afbeelding te verkrijgen
-    const img = new Image();
-    img.onload = () => {
-      const width = img.width / 2;
-      const height = img.height / 2;
-
-      const textureLoader = new THREE.TextureLoader();
-      textureLoader.load(
-        fileURL,
-        (texture) => {
-          const material = new THREE.MeshBasicMaterial({
-            map: texture,
-            side: THREE.DoubleSide,
-          });
-
-          const geometry = new THREE.PlaneGeometry(width / 100, height / 100);
-
-          currentImage = new THREE.Mesh(geometry, material);
-
-          currentImage.position.set(0, 0, -5);
-
-          scene.add(currentImage);
-        },
-        undefined,
-        (err) => console.error("Texture loading error:", err)
-      );
-    };
-
-    img.src = fileURL; // Start het laden van de afbeelding
-  }
-
-  function resetCanvas() {
-    // Verwijder alle kinderen van de scene
     while (scene.children.length > 0) {
       const object = scene.children[0];
       if (object.geometry) object.geometry.dispose();
@@ -247,25 +255,41 @@ export function createScene0(scene, camera, renderer, gui, fileInput) {
       scene.remove(object);
     }
 
-    // Reset currentImage
     currentImage = null;
+
+    const img = new Image();
+    img.onload = () => {
+      const width = img.width / 2;
+      const height = img.height / 2;
+
+      const textureLoader = new THREE.TextureLoader();
+      textureLoader.crossOrigin = "anonymous";
+      textureLoader.load(
+        fileURL,
+        (texture) => {
+          const material = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+          });
+
+          const geometry = new THREE.PlaneGeometry(width / 100, height / 100);
+          currentImage = new THREE.Mesh(geometry, material);
+          currentImage.position.set(0, 0, -5);
+          scene.add(currentImage);
+        },
+        undefined,
+        (err) => console.error("Texture loading error:", err)
+      );
+    };
+
+    img.src = fileURL;
   }
 
-  function selectImage(index) {
-    const file = filesList[index];
-    console.log(`Geselecteerde foto: ${file.name}`);
-
-    currentFile = file; // Update currentFile
-    applyAdjustments(); // Pas de instellingen toe op de geselecteerde afbeelding
-
-    // Reset canvas en toon de afbeelding in de 3D-scène
-    displayImageInScene(file.url);
-  }
-
-  // Animate functie
   function animate() {
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
   }
+
+  loadImagesFromStorage();
   animate();
 }
