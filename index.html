@@ -1,48 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ETVR inspector</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="lilGUI.css" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap"
-      rel="stylesheet"
-    />
-  </head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ETVR inspector</title>
 
-  <body>
-    <section class="overlay">
-      <section class="loadingContainer">
-        <article class="loadingCard">
-          <section>
-            <header class="loadingTitle">Bestand laden...</header>
-            <section class="loadingFilename" id="loading-filename">Initialiseren...</section>
-            <section class="progressContainer">
-              <progress class="progressBar" id="loading-progress"></progress>
-            </section>
-            <footer class="progressText">
-              <output id="progress-percentage">0</output>% voltooid
-            </footer>
-          </section>
-        </article>
+  <!-- Core Scripts -->
+  <script src="https://unpkg.com/three@0.160.0/build/three.js"></script>
+
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="lilGUI.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+  <section class="overlay">
+    <!-- <section id="menu">
+      <section>
+        <h1>Welkom bij casus: Apeldoorn huisje.</h1>
+        <h2>Kies een omgeving waarin u wilt werken.</h2>
       </section>
 
-      <script type="module">
-        import { showMenu, loadScene, initScene } from "./main.js";
-
-        window.onload = (event) => {
-          initScene();
-        };
-
-        window.showMenu = showMenu;
-        window.loadScene = loadScene;
-      </script>
+      <section class="options">
+        <button class="menu-button" onclick="loadScene('Fotos')">
+          Foto's
+        </button>
+        <button class="menu-button" onclick="loadScene('Objects')">
+          3D objecten
+        </button>
+        <button class="menu-button" onclick="loadScene('Panoramas')">
+          Panorama's
+        </button>
+        <button class="menu-button" onclick="loadScene('Pointcloud')">
+          Puntenwolken
+        </button>
+      </section>
+      <img src="plattegrond/plattegrond.png" class="plattegrond" id="plattegrond" alt="plattegrond" />
     </section>
-  </body>
+
+    <button id="backButton" class="menu-button" onclick="showMenu()">
+      Back to Menu
+    </button> -->
+
+    <section class="loadingContainer">
+      <article class="loadingCard">
+        <section>
+          <header class="loadingTitle">Bestand laden...</header>
+          <section class="loadingFilename" id="loading-filename">Initialiseren...</section>
+          <section class="progressContainer">
+            <progress class="progressBar" id="loading-progress"></progress>
+          </section>
+          <footer class="progressText">
+            <output id="progress-percentage">0</output>% voltooid
+          </footer>
+        </section>
+      </article>
+    </section>
+
+    <!-- Load main.js after THREE and addons are loaded -->
+
+    <script type="module">
+      import { showMenu, loadScene, initScene } from "./main.js";
+
+      window.onload = (event) => {
+        initScene();
+      };
+
+      window.showMenu = showMenu;
+      window.loadScene = loadScene;
+    </script>
+  </section>
+</body>
+
 </html>
