@@ -214,7 +214,7 @@ h3 {
 .progressBar {
   width: 0%;
 
-  background-color: #0d275e;
+  background-color: #0D275E;
 }
 
 .progressText {
@@ -226,7 +226,4 @@ h3 {
 .plattegrond {
   width: 24rem;
   height: 24rem;
-  position: relative;
-  top: 8rem;
-  right: 40rem;
 }
