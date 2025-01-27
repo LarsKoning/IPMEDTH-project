@@ -1,4 +1,3 @@
-import * as THREE from "three";
 import GUI from "lil-gui";
 import { VRButton } from "three/examples/jsm/webxr/VRButton.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
