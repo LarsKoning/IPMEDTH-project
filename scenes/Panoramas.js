@@ -4,6 +4,7 @@ import { panoramaRef } from "../API.js";
 export function createScene2(scene, camera, renderer, gui, controls) {
 	controls.enabled = true;
 	let currentFile = null;
+	let sphereMesh = null;
 
 	function loadPanoramasFromStorage() {
 		listAll(panoramaRef).then((result) => {
