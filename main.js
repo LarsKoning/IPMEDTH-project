@@ -58,16 +58,9 @@ export function initScene() {
   controller2.addEventListener("selectstart", onSelectStart);
 
   addLights();
-  // createUI();
-  const cube = new THREE.Mesh(
-    new THREE.BoxGeometry(0.5, 0.5, 0.5),
-    new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-  );
-  cube.position.set(0, 1.5, -2);
-  scene.add(cube);
-  
+  createUI();
 
-  // createBackButton(); // Create the back button (hidden initially)
+  createBackButton(); // Create the back button (hidden initially)
 
   animate();
 
@@ -80,18 +73,18 @@ function onEnterVR() {
   console.log("Entering VR mode");
 
   // Set up container for VR mode
-  // const distance = -2; // Fixed distance for VR UI
-  // const height = 1.5; // Smaller height for VR UI panel
-  // const width = height * camera.aspect;
+  const distance = -2; // Fixed distance for VR UI
+  const height = 1.5; // Smaller height for VR UI panel
+  const width = height * camera.aspect;
 
-  // if (container) {
-  //   container.set({
-  //     width: width,
-  //     height: height,
-  //   });
+  if (container) {
+    container.set({
+      width: width,
+      height: height,
+    });
 
-  //   container.position.set(0, 1, distance); // Positioned slightly above the user's line of sight
-  // }
+    container.position.set(0, 1, distance); // Positioned slightly above the user's line of sight
+  }
 }
 
 function onExitVR() {
@@ -113,84 +106,189 @@ function onExitVR() {
   }
 }
 
-// function createUI() {
-//   const container = new ThreeMeshUI.Block({
-//     width: 1,
-//     height: 0.5,
-//     padding: 0.05,
-//     justifyContent: "center",
-//     alignItems: "center",
-//     fontFamily: "https://unpkg.com/three-mesh-ui/examples/assets/Roboto-msdf.json",
-//     fontTexture: "https://unpkg.com/three-mesh-ui/examples/assets/Roboto-msdf.png",
-//     backgroundColor: new THREE.Color(0x333333),
-//     backgroundOpacity: 1,
-//   });
+function createUI() {
+  const distance = -2; // Distance from camera to container
+  const height =
+    4 * Math.tan((camera.fov * Math.PI) / 360) * Math.abs(distance); // Full visible height
+  const width = height * camera.aspect;
 
-//   const text = new ThreeMeshUI.Text({
-//     content: "Hello, ThreeMeshUI!",
-//     fontSize: 0.07,
-//     fontColor: new THREE.Color(0xffffff),
-//   });
+  // Main container filling the screen
+  container = new ThreeMeshUI.Block({
+    width: width, // Slightly smaller width than the full screen for padding
+    height: height, // Smaller height to give some top and bottom space
+    padding: 0.05,
+    justifyContent: "space-around",
+    alignItems: "center",
+    contentDirection: "column",
+    fontFamily:
+      "https://unpkg.com/three-mesh-ui/examples/assets/Roboto-msdf.json",
+    fontTexture:
+      "https://unpkg.com/three-mesh-ui/examples/assets/Roboto-msdf.png",
+    backgroundColor: new THREE.Color(0xf2f2f2),
+    backgroundOpacity: 1,
+  });
 
-//   container.add(text);
-//   container.position.set(0, 1.5, -2);
-//   scene.add(container);
-// }
+  container.position.set(0, 0, distance); // Center container vertically at distance -2
+  scene.add(container);
 
+  // Title (h1 equivalent)
+  const titleBlock = new ThreeMeshUI.Block({
+    width: width * 0.9,
+    height: 0.25,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundOpacity: 0,
+  });
+  titleBlock.add(
+    new ThreeMeshUI.Text({
+      content: "Welkom bij casus: Apeldoorn huisje",
+      fontSize: height / 22,
+      fontColor: new THREE.Color(0x000000),
+      fontWeight: "600",
+    })
+  );
+  container.add(titleBlock);
 
-// function createBackButton() {
-//   // Create the back button UI block
-//   backButtonBlock = new ThreeMeshUI.Block({
-//     width: 0.9, // Increased width to fit the text comfortably
-//     height: 0.3, // Increased height to fit the text comfortably
-//     justifyContent: "center", // Center text horizontally
-//     alignItems: "center", // Center text vertically
-//     paddingLeft: 10, // No padding to avoid pushing text away from the center
-//     margin: 0, // No margin
-//     borderWidth: 0.01, // Border width
-//     borderRadius: 0.05, // Rounded corners
-//     backgroundColor: new THREE.Color(0xe6e6e6), // Background color
-//     borderColor: new THREE.Color(0x0d275e), // Border color
-//     fontFamily:
-//       "https://unpkg.com/three-mesh-ui/examples/assets/Roboto-msdf.json",
-//     fontTexture:
-//       "https://unpkg.com/three-mesh-ui/examples/assets/Roboto-msdf.png",
-//   });
+  // Subtitle (h2 equivalent)
+  const subtitleBlock = new ThreeMeshUI.Block({
+    width: width * 0.9,
+    height: height / 24,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundOpacity: 0,
+  });
+  subtitleBlock.add(
+    new ThreeMeshUI.Text({
+      content: "Kies een omgeving waarin u wilt werken.",
+      fontSize: height / 28,
+      fontColor: new THREE.Color(0x000000),
+      fontWeight: "600",
+    })
+  );
+  container.add(subtitleBlock);
 
-//   const backButtonText = new ThreeMeshUI.Text({
-//     content: "Back to Menu",
-//     fontSize: 0.12,
-//     fontColor: new THREE.Color(0x0d275e),
-//     fontWeight: "700",
-//   });
+  // Button container
+  const buttonContainer = new ThreeMeshUI.Block({
+    width: width * 0.9,
+    height: height / 8,
+    justifyContent: "space-around",
+    alignItems: "center",
+    contentDirection: "row",
+    backgroundOpacity: 0,
+  });
 
-//   backButtonBlock.add(backButtonText);
+  const buttonOptions = [
+    { label: "Foto's", scene: "Fotos" },
+    { label: "3D objecten", scene: "Objects" },
+    { label: "Panorama's", scene: "Panoramas" },
+    { label: "Puntenwolken", scene: "Pointcloud" },
+  ];
 
-//   // Add an onSelect function for the back button
-//   backButtonBlock.onSelect = () => {
-//     console.log("Back to menu button clicked.");
-//     console.log(window.innerHeight);
-//     console.log(window.innerWidth);
-//     showMenu();
-//   };
+  buttonOptions.forEach((option) => {
+    const buttonBlock = new ThreeMeshUI.Block({
+      width: width / 7,
+      height: height / 12,
+      justifyContent: "center",
+      alignItems: "center",
+      margin: 0.02,
+      padding: 0.02,
+      backgroundColor: new THREE.Color(0x0d275e),
+      borderRadius: 0.05,
+      fontWeight: "700",
+    });
 
-//   backButtonBlock.isBackButton = true;
-//   intersectionObjects.push(backButtonBlock);
+    const buttonText = new ThreeMeshUI.Text({
+      content: option.label,
+      fontSize: 0.14,
+      fontColor: new THREE.Color(0xe6e6e6),
+    });
 
-//   // Position it at the top-left corner relative to the camera
-//   // backButtonBlock.position.set(0, 0, -1.5);
+    buttonBlock.add(buttonText);
 
-//   // Dynamically position the back button at the top-left corner
-//   // Based on window dimensions
-//   const screenWidth = window.innerWidth;
-//   const screenHeight = window.innerHeight;
+    buttonBlock.setupState({
+      state: "hovered",
+      attributes: {
+        backgroundColor: new THREE.Color(0xe6e6e6),
+        fontColor: new THREE.Color(0x0d275e),
+      },
+    });
+    buttonBlock.setupState({
+      state: "idle",
+      attributes: {
+        backgroundColor: new THREE.Color(0x0d275e),
+        fontColor: new THREE.Color(0xe6e6e6),
+      },
+    });
 
-//   // Set position in the left-top corner with a small offset
-//   const xPosition = -screenWidth / 384 - 0.5; // Left side with a little margin
-//   const yPosition = screenHeight / 384 + 0.2; // Top side with a little margin
+    // Add a console log when the button is clicked
+    buttonBlock.onSelect = () => {
+      console.log(
+        `Button "${option.label}" clicked. Scene ID: ${option.scene}`
+      );
+      loadScene(option.scene);
+    };
 
-//   backButtonBlock.position.set(xPosition, yPosition, -1.5);
-// }
+    buttonBlock.isUI = true;
+    intersectionObjects.push(buttonBlock);
+    buttonContainer.add(buttonBlock);
+  });
+
+  container.add(buttonContainer);
+}
+
+function createBackButton() {
+  // Create the back button UI block
+  backButtonBlock = new ThreeMeshUI.Block({
+    width: 0.9, // Increased width to fit the text comfortably
+    height: 0.3, // Increased height to fit the text comfortably
+    justifyContent: "center", // Center text horizontally
+    alignItems: "center", // Center text vertically
+    paddingLeft: 10, // No padding to avoid pushing text away from the center
+    margin: 0, // No margin
+    borderWidth: 0.01, // Border width
+    borderRadius: 0.05, // Rounded corners
+    backgroundColor: new THREE.Color(0xe6e6e6), // Background color
+    borderColor: new THREE.Color(0x0d275e), // Border color
+    fontFamily:
+      "https://unpkg.com/three-mesh-ui/examples/assets/Roboto-msdf.json",
+    fontTexture:
+      "https://unpkg.com/three-mesh-ui/examples/assets/Roboto-msdf.png",
+  });
+
+  const backButtonText = new ThreeMeshUI.Text({
+    content: "Back to Menu",
+    fontSize: 0.12,
+    fontColor: new THREE.Color(0x0d275e),
+    fontWeight: "700",
+  });
+
+  backButtonBlock.add(backButtonText);
+
+  // Add an onSelect function for the back button
+  backButtonBlock.onSelect = () => {
+    console.log("Back to menu button clicked.");
+    console.log(window.innerHeight);
+    console.log(window.innerWidth);
+    showMenu();
+  };
+
+  backButtonBlock.isBackButton = true;
+  intersectionObjects.push(backButtonBlock);
+
+  // Position it at the top-left corner relative to the camera
+  // backButtonBlock.position.set(0, 0, -1.5);
+
+  // Dynamically position the back button at the top-left corner
+  // Based on window dimensions
+  const screenWidth = window.innerWidth;
+  const screenHeight = window.innerHeight;
+
+  // Set position in the left-top corner with a small offset
+  const xPosition = -screenWidth / 384 - 0.5; // Left side with a little margin
+  const yPosition = screenHeight / 384 + 0.2; // Top side with a little margin
+
+  backButtonBlock.position.set(xPosition, yPosition, -1.5);
+}
 
 function onMouseMove(event) {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -264,12 +362,10 @@ function addLights() {
 
 function animate() {
   renderer.setAnimationLoop(() => {
-    // ThreeMeshUI.update(); // Update UI each frame
-    controls.update();    // Update OrbitControls if enabled
+    ThreeMeshUI.update(); // Update the UI each frame
     renderer.render(scene, camera);
   });
 }
-
 
 export async function loadScene(sceneId) {
   // Clear previous scene
@@ -287,6 +383,12 @@ export async function loadScene(sceneId) {
 
   gui = new GUI();
   gui.title("Settings menu");
+
+  // Create a hidden file input
+  fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.style.display = "none";
+  document.body.appendChild(fileInput);
 
   scene.add(backButtonBlock);
   intersectionObjects.push(backButtonBlock);
@@ -324,6 +426,9 @@ export function showMenu() {
     gui.destroy(); // Only destroy if gui is defined
   }
 
+  if (fileInput) {
+    fileInput.remove(); // Only remove if fileInput is defined
+  }
 
   scene.add(container);
   controls.reset();
