@@ -1,6 +1,7 @@
 import GUI from "lil-gui";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { VRButton } from 'three/addons/webxr/VRButton.js';
+import ThreeMeshUI from "three-mesh-ui";
 
 let scene,
 	camera,
