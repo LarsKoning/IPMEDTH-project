@@ -22,7 +22,7 @@ export function createScene1(scene, camera, renderer, gui, controls) {
   const loadedObjects = {}; // To store loaded objects
   const objectSettings = {}; // To store settings for each object
   let currentObject = null;
-  
+
   // Create a settings object that will be used by lil-gui
   const settings = {
     selectedObject: "Geen objecten beschikbaar",
@@ -61,7 +61,7 @@ export function createScene1(scene, camera, renderer, gui, controls) {
     Object.entries(settings).forEach(([key, value]) => {
       // Find and update the corresponding controller
       for (const folder of gui.folders) {
-        const controller = folder.controllers.find(c => c.property === key);
+        const controller = folder.controllers.find((c) => c.property === key);
         if (controller) {
           controller.setValue(value);
         }
@@ -76,23 +76,25 @@ export function createScene1(scene, camera, renderer, gui, controls) {
       const result = await listAll(objectsRef);
       const promises = result.items.map(async (itemRef) => {
         const fileURL = await getDownloadURL(itemRef);
-        const fileExtension = itemRef.name.slice(itemRef.name.lastIndexOf(".")).toLowerCase();
+        const fileExtension = itemRef.name
+          .slice(itemRef.name.lastIndexOf("."))
+          .toLowerCase();
         const metadata = await getMetadata(itemRef);
         const fileSizeInMB = metadata.size / (1024 * 1024);
-        
-        return { 
-          name: itemRef.name, 
-          url: fileURL, 
+
+        return {
+          name: itemRef.name,
+          url: fileURL,
           extension: fileExtension,
-          size: fileSizeInMB 
+          size: fileSizeInMB,
         };
       });
-  
+
       const files = await Promise.all(promises);
       const supportedFiles = files.filter((file) =>
         [".obj", ".glb", ".fbx", ".stl"].includes(file.extension)
       );
-  
+
       if (supportedFiles.length === 0) {
         alert("Geen 3D objecten beschikbaar");
         hideLoadingScreen();
@@ -101,15 +103,21 @@ export function createScene1(scene, camera, renderer, gui, controls) {
 
       // Clear the initial "Geen objecten beschikbaar" entry once we have files
       filesList.length = 0;
-  
+
       for (const file of supportedFiles) {
         try {
           if (file.size > 100) {
-            console.warn(`File ${file.name} is te groot (${Math.round(file.size)}MB)`);
-            alert(`Let op: ${file.name} is te groot om te laden (${Math.round(file.size)}MB). ` +
-                  `De maximale bestandsgrootte is 100MB. \n\n` +
-                  `Het bestand is wel opgeslagen maar kan niet worden weergegeven. ` +
-                  `Neem contact op met de toezichthouder voor een geoptimaliseerde versie.`);
+            console.warn(
+              `File ${file.name} is te groot (${Math.round(file.size)}MB)`
+            );
+            alert(
+              `Let op: ${file.name} is te groot om te laden (${Math.round(
+                file.size
+              )}MB). ` +
+                `De maximale bestandsgrootte is 100MB. \n\n` +
+                `Het bestand is wel opgeslagen maar kan niet worden weergegeven. ` +
+                `Neem contact op met de toezichthouder voor een geoptimaliseerde versie.`
+            );
             continue;
           }
 
@@ -117,12 +125,12 @@ export function createScene1(scene, camera, renderer, gui, controls) {
 
           const object = await new Promise((resolve, reject) => {
             const loader = loaderMap[file.extension];
-            
-            if (file.extension === '.fbx') {
-              loader.setPath('');
-              loader.setResourcePath('');
+
+            if (file.extension === ".fbx") {
+              loader.setPath("");
+              loader.setResourcePath("");
             }
-  
+
             loader.load(
               file.url,
               (loadedObject) => {
@@ -133,8 +141,9 @@ export function createScene1(scene, camera, renderer, gui, controls) {
                 resolve(loadedObject);
               },
               (progress) => {
-                const progressPercentage = (progress.loaded / ((file.size) * (1024 * 1024))) * 100;
-                
+                const progressPercentage =
+                  (progress.loaded / (file.size * (1024 * 1024))) * 100;
+
                 updateLoadingProgress(file.name, progressPercentage);
               },
               (error) => {
@@ -143,7 +152,7 @@ export function createScene1(scene, camera, renderer, gui, controls) {
               }
             );
           });
-  
+
           console.log(`Successfully loaded: ${file.name}`);
           loadedObjects[file.name] = object;
           objectSettings[file.name] = createDefaultSettings();
@@ -155,7 +164,7 @@ export function createScene1(scene, camera, renderer, gui, controls) {
             scene.add(currentObject);
             settings.selectedObject = file.name; // Update the settings object
             selectionController.updateDisplay(); // Update the GUI display
-            
+
             // Apply initial settings
             applySettingsToGUI(objectSettings[file.name]);
           }
@@ -166,7 +175,6 @@ export function createScene1(scene, camera, renderer, gui, controls) {
 
       // Update the selection controller with the new file list
       selectionController.options(filesList);
-      
     } catch (error) {
       console.error("Error fetching objects from Firebase Storage:", error);
       alert("Probleem bij het laden van 3D objecten.");
@@ -177,7 +185,7 @@ export function createScene1(scene, camera, renderer, gui, controls) {
 
   // Initialize GUI
   const selectionController = gui
-    .add(settings, 'selectedObject', filesList)
+    .add(settings, "selectedObject", filesList)
     .name("Select 3D object");
 
   selectionController.onChange((selectedName) => {
@@ -194,7 +202,7 @@ export function createScene1(scene, camera, renderer, gui, controls) {
           rotationZ: settings.rotationZ,
           autoRotate: settings.autoRotate,
           rotationSpeed: settings.rotationSpeed,
-          color: settings.color
+          color: settings.color,
         };
         scene.remove(currentObject);
       }
@@ -280,16 +288,19 @@ export function createScene1(scene, camera, renderer, gui, controls) {
     .name("Automatisch draaien")
     .onChange(() => {
       if (currentObject) {
-        objectSettings[settings.selectedObject].autoRotate = settings.autoRotate;
+        objectSettings[settings.selectedObject].autoRotate =
+          settings.autoRotate;
       }
     });
 
   animations
-    .add(settings, "rotationSpeed", 0, 0.1)
+    .add(settings, "rotationSpeed", 0, 10) // Verander het bereik naar 0-10
     .name("Draai snelheid")
     .onChange(() => {
       if (currentObject) {
-        objectSettings[settings.selectedObject].rotationSpeed = settings.rotationSpeed;
+        // Schaal de waarde naar 0-0.01
+        const scaledSpeed = settings.rotationSpeed / 1000; // 0-10 wordt 0-0.01
+        objectSettings[settings.selectedObject].rotationSpeed = scaledSpeed;
       }
     });
 
@@ -298,7 +309,8 @@ export function createScene1(scene, camera, renderer, gui, controls) {
 
   function animate() {
     if (currentObject && settings.autoRotate) {
-      currentObject.rotation.y += settings.rotationSpeed;
+      const scaledSpeed = settings.rotationSpeed / 1000; // Schaal terug naar 0-0.01
+      currentObject.rotation.y += scaledSpeed;
     }
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
@@ -307,24 +319,26 @@ export function createScene1(scene, camera, renderer, gui, controls) {
 
   // Helper functions
   function showLoadingScreen() {
-    const loadingScreen = document.getElementsByClassName("loadingContainer")[0];
+    const loadingScreen =
+      document.getElementsByClassName("loadingContainer")[0];
     if (loadingScreen) {
       loadingScreen.style.display = "flex";
     }
   }
 
   function hideLoadingScreen() {
-    const loadingScreen = document.getElementsByClassName("loadingContainer")[0];
+    const loadingScreen =
+      document.getElementsByClassName("loadingContainer")[0];
     if (loadingScreen) {
       loadingScreen.style.display = "none";
     }
   }
 
   function updateLoadingProgress(filename, progress) {
-    const progressBar = document.getElementById('loading-progress');
-    const progressText = document.getElementById('progress-percentage');
-    const filenameElement = document.getElementById('loading-filename');
-    
+    const progressBar = document.getElementById("loading-progress");
+    const progressText = document.getElementById("progress-percentage");
+    const filenameElement = document.getElementById("loading-filename");
+
     if (progressBar && progressText && filenameElement) {
       progressBar.style.width = `${progress}%`;
       progressText.textContent = Math.round(progress * 100) / 100;
