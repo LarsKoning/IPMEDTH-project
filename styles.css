@@ -104,6 +104,18 @@ h3 {
   background: #0d275e; /* Primary color */
 }
 
+.menu-button:disabled:hover {
+  color: #e6e6e6;
+  border-color: #e6e6e6;
+  background: #7d8494;
+}
+
+.menu-button:disabled {
+  color: #e6e6e6;
+  border-color: #e6e6e6;
+  background: #7d8494;
+}
+
 #backButton {
   color: #0d275e;
   border-color: #0d275e;
@@ -209,4 +221,9 @@ h3 {
   text-align: center;
 
   color: #666;
+}
+
+.plattegrond {
+  width: 24rem;
+  height: 24rem;
 }
