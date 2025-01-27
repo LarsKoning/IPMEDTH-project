@@ -4,18 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ETVR inspector</title>
+    
+    <!-- Core Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lil-gui@0.18"></script>
+    
+    <!-- THREE.js Addons -->
+    <script src="https://unpkg.com/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://unpkg.com/three@0.160.0/examples/js/webxr/VRButton.js"></script>
+
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="lilGUI.css" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap"
       rel="stylesheet"
     />
   </head>
-
   <body>
     <section class="overlay">
       <section id="menu">
@@ -67,6 +74,7 @@
           initScene();
         };
 
+        // Expose functions to window object for button onclick handlers
         window.showMenu = showMenu;
         window.loadScene = loadScene;
       </script>
