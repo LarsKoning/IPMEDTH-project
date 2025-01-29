@@ -85,20 +85,26 @@ function onEnterVR() {
 
   // Set up container for VR mode
   const scaleFactor = 0.1; // Scaling factor for all UI elements in VR
-  const distance = -0.75; // Fixed distance for VR UI
-
+  
   if (container) {
-    // Adjust container position for VR
-    container.position.set(0, 1.2, distance); // Center slightly above eye level
+    // Wait for next frame to ensure XR camera is initialized
+    renderer.xr.getSession().requestAnimationFrame(() => {
+      const xrCamera = renderer.xr.getCamera();
+      const cameraHeight = xrCamera.position.y || 1.6; // Default to average VR height if not available
+      
+      // Position the container in front of the user at eye level
+      container.position.set(0, cameraHeight, -0.75);
+      
+      // Scale the entire container
+      container.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
-    // Scale the entire container
-    container.scale.set(scaleFactor, scaleFactor, scaleFactor);
-
-    scene.add(container);
+      // Make sure container is added to the scene
+      if (!scene.children.includes(container)) {
+        scene.add(container);
+      }
+    });
   }
 }
-
-
 function onExitVR() {
   console.log("Exiting VR mode");
 
