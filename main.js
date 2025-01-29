@@ -80,25 +80,24 @@ export function initScene() {
 function onEnterVR() {
   console.log("Entering VR mode");
 
-
   inVR = true;
   controls.enabled = true;
 
   // Set up container for VR mode
-  const distance = -2; // Fixed distance for VR UI
-  const height = 1.5; // Smaller height for VR UI panel
-  const width = height * camera.aspect;
+  const scaleFactor = 0.1; // Scaling factor for all UI elements in VR
+  const distance = -0.75; // Fixed distance for VR UI
 
   if (container) {
-    container.set({
-      width: width,
-      height: height,
-    });
+    // Adjust container position for VR
+    container.position.set(0, 1.2, distance); // Center slightly above eye level
 
-    container.position.set(0, 1, distance); // Positioned slightly above the user's line of sight
+    // Scale the entire container
+    container.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
     scene.add(container);
   }
 }
+
 
 function onExitVR() {
   console.log("Exiting VR mode");
