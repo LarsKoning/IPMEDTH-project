@@ -111,24 +111,30 @@ function updateControllerRays() {
       );
 
       const intersects = raycaster.intersectObjects(intersectionObjects, true);
-      
-      console.log("VR Controller Ray Intersections:", intersects.length);
-      
+
       if (intersects.length > 0) {
-        let button = intersects[0].object.parent; // Go up to the Block
-        
+        let button = intersects[0].object.parent; // Get the Block
+
         if (button && button.isUI) {
           try {
             console.log("Attempting to hover:", button);
-            // Directly change state
-            button.set({
-              backgroundColor: new THREE.Color(0xe6e6e6),
-              fontColor: new THREE.Color(0x0d275e)
-            });
+
+            // Apply hover state
+            if (button.onHover) {
+              button.onHover(true);
+            }
+
           } catch (error) {
             console.error("Hover state error:", error);
           }
         }
+      } else {
+        // Reset all buttons to idle state if no intersection
+        intersectionObjects.forEach(button => {
+          if (button.isUI && button.onHover) {
+            button.onHover(false);
+          }
+        });
       }
     }
   });
@@ -146,7 +152,7 @@ function onEnterVR() {
   controller1 = renderer.xr.getController(0);
   controller2 = renderer.xr.getController(1);
 
- // ✅ Ensure controllers have rays attached
+  // ✅ Ensure controllers have rays attached
   if (!controller1.getObjectByName("controllerRay")) {
     console.log("Quest 2 - Adding controllerRay to Controller 1");
     controller1.add(createControllerRay());
@@ -293,17 +299,6 @@ function createUI() {
       backgroundColor: new THREE.Color(0x0d275e),
       borderRadius: 0.05,
       fontWeight: "700",
-      // Add state management directly here
-      states: {
-        idle: {
-          backgroundColor: new THREE.Color(0x0d275e),
-          fontColor: new THREE.Color(0xe6e6e6)
-        },
-        hovered: {
-          backgroundColor: new THREE.Color(0xe6e6e6),
-          fontColor: new THREE.Color(0x0d275e)
-        }
-      }
     });
 
     const buttonText = new ThreeMeshUI.Text({
@@ -314,6 +309,30 @@ function createUI() {
 
     buttonBlock.add(buttonText);
 
+    buttonBlock.textElement = buttonText;
+
+    intersectionObjects.push(buttonBlock);
+
+    buttonBlock.onHover = (isHovering) => {
+      if (isHovering) {
+        buttonBlock.set({ backgroundColor: new THREE.Color(0xe6e6e6) });
+        buttonText.set({ fontColor: new THREE.Color(0x0d275e) }); // Change text color
+      } else {
+        buttonBlock.set({ backgroundColor: new THREE.Color(0x0d275e) });
+        buttonText.set({ fontColor: new THREE.Color(0xe6e6e6) }); // Reset text color
+      }
+    };
+
+    // Ensure hover state affects both button and text
+    buttonBlock.setState = function (state) {
+      if (state === "hovered") {
+        this.set({ backgroundColor: new THREE.Color(0xe6e6e6) });
+        this.textElement.set({ fontColor: new THREE.Color(0x0d275e) }); // Change text color
+      } else {
+        this.set({ backgroundColor: new THREE.Color(0x0d275e) });
+        this.textElement.set({ fontColor: new THREE.Color(0xe6e6e6) }); // Reset text color
+      }
+    };
     const buttonMesh = new THREE.Mesh(
       new THREE.PlaneGeometry(width / 7, height / 12), // Same as button dimensions
       new THREE.MeshBasicMaterial({ visible: false }) // Invisible but detectable
@@ -328,7 +347,7 @@ function createUI() {
       console.log(`Button "${option.label}" clicked.`);
       loadScene(option.scene);
     };
-  
+
     buttonContainer.add(buttonBlock);
 
     buttonBlock.geometry = new THREE.PlaneGeometry(0.5, 0.2);  // Give it a geometry
@@ -343,7 +362,7 @@ function createUI() {
     };
 
     buttonBlock.isUI = true;
-    intersectionObjects.push(buttonBlock);
+
     buttonContainer.add(buttonBlock);
     // buttonContainer.isUI = true;
   });
@@ -426,12 +445,12 @@ function onMouseClick(event) {
 
 function onSelectStart(event) {
   const controller = event.target;
-  
+
   if (!controller) return;
 
   // Use global raycaster for intersection
   raycaster.set(
-    controller.position, 
+    controller.position,
     new THREE.Vector3(0, 0, -1).applyQuaternion(controller.quaternion)
   );
 
@@ -528,19 +547,19 @@ export async function loadScene(sceneId) {
   switch (sceneId) {
     case "Fotos":
       const { createScene0 } = await import("./scenes/Fotos.js");
-      createScene0(scene, camera, renderer, gui);
+      createScene0(scene, camera, renderer, gui, inVR);
       break;
     case "Objects":
       const { createScene1 } = await import("./scenes/Objects.js");
-      createScene1(scene, camera, renderer, gui, controls);
+      createScene1(scene, camera, renderer, gui, controls, inVR);
       break;
     case "Panoramas":
       const { createScene2 } = await import("./scenes/Panoramas.js");
-      createScene2(scene, camera, renderer, gui, controls);
+      createScene2(scene, camera, renderer, gui, controls, inVR);
       break;
     case "Pointcloud":
       const { createScene3 } = await import("./scenes/Pointcloud.js");
-      createScene3(scene, camera, renderer, gui);
+      createScene3(scene, camera, renderer, gui, inVR);
       break;
   }
 }
