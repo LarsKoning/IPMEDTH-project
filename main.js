@@ -100,7 +100,11 @@ function createControllerRay() {
   return rayLine;
 }
 
+let lastHoveredButton = null; // Store the last hovered button to reset it
+
 function updateControllerRays() {
+  let hoveredThisFrame = false; // Track if something is hovered in this frame
+
   [controller1, controller2].forEach(controller => {
     const ray = controller.getObjectByName('controllerRay');
 
@@ -116,29 +120,34 @@ function updateControllerRays() {
         let button = intersects[0].object.parent; // Get the Block
 
         if (button && button.isUI) {
-          try {
-            console.log("Attempting to hover:", button);
+          if (lastHoveredButton !== button) {
+            // Reset previous button
+            if (lastHoveredButton && lastHoveredButton.onHover) {
+              lastHoveredButton.onHover(false);
+            }
 
-            // Apply hover state
+            // Set new hovered button
+            lastHoveredButton = button;
             if (button.onHover) {
               button.onHover(true);
             }
+          }
 
-          } catch (error) {
-            console.error("Hover state error:", error);
-          }
+          hoveredThisFrame = true; // Something was hovered
         }
-      } else {
-        // Reset all buttons to idle state if no intersection
-        intersectionObjects.forEach(button => {
-          if (button.isUI && button.onHover) {
-            button.onHover(false);
-          }
-        });
       }
     }
   });
+
+  // If no buttons were hovered, reset the last hovered button
+  if (!hoveredThisFrame && lastHoveredButton) {
+    if (lastHoveredButton.onHover) {
+      lastHoveredButton.onHover(false);
+    }
+    lastHoveredButton = null;
+  }
 }
+
 
 
 
