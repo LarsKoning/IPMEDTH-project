@@ -49,6 +49,9 @@ export function initScene() {
   controller1 = renderer.xr.getController(0);
   controller2 = renderer.xr.getController(1);
 
+  controller1.add(createControllerRay());
+  controller2.add(createControllerRay());
+
   scene.add(controller1);
   scene.add(controller2);
 
@@ -77,24 +80,74 @@ export function initScene() {
   showMenu();
 }
 
+function createControllerRay() {
+  const rayGeometry = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, -1)
+  ]);
+
+  const rayMaterial = new THREE.LineBasicMaterial({
+    color: 0x0000ff,
+    linewidth: 2,
+    opacity: 0.8,
+    transparent: true
+  });
+
+  const rayLine = new THREE.Line(rayGeometry, rayMaterial);
+  rayLine.name = 'controllerRay';
+  rayLine.scale.z = 5; // 5 meter long ray
+
+  return rayLine;
+}
+
+function updateControllerRays() {
+  [controller1, controller2].forEach(controller => {
+    const ray = controller.getObjectByName('controllerRay');
+
+    if (ray) {
+      ray.visible = inVR;  // Ensure visibility in VR mode
+      ray.scale.z = 5; // 5 meters long
+
+      // Ensure ray is correctly positioned and oriented
+      ray.position.set(0, 0, 0);
+      ray.quaternion.identity();
+    }
+  });
+}
+
+
 function onEnterVR() {
   console.log("Entering VR mode");
 
   inVR = true;
   controls.enabled = true;
 
+  // Ensure controllers are properly assigned in XR mode
+  controller1 = renderer.xr.getController(0);
+  controller2 = renderer.xr.getController(1);
+
+  if (!controller1.getObjectByName("controllerRay")) {
+    controller1.add(createControllerRay());
+  }
+  if (!controller2.getObjectByName("controllerRay")) {
+    controller2.add(createControllerRay());
+  }
+
+  scene.add(controller1);
+  scene.add(controller2);
+
   // Set up container for VR mode
   const scaleFactor = 0.1; // Scaling factor for all UI elements in VR
-  
+
   if (container) {
     // Wait for next frame to ensure XR camera is initialized
     renderer.xr.getSession().requestAnimationFrame(() => {
       const xrCamera = renderer.xr.getCamera();
       const cameraHeight = xrCamera.position.y || 1.6; // Default to average VR height if not available
-      
+
       // Position the container in front of the user at eye level
       container.position.set(0, cameraHeight, -0.75);
-      
+
       // Scale the entire container
       container.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
@@ -362,21 +415,32 @@ function addLights() {
 }
 
 function animate() {
-  renderer.setAnimationLoop(() => {
+  renderer.setAnimationLoop((timestamp, frame) => {
     if (controls.enabled) {
       controls.update();
     }
-    // Update visibility of rays on controllers
-    if (controller1 && controller1.children.length > 0) {
-      controller1.children[0].visible = true;
-    }
-    if (controller2 && controller2.children.length > 0) {
-      controller2.children[0].visible = true;
+
+    if (frame) {
+      const session = renderer.xr.getSession();
+      const referenceSpace = renderer.xr.getReferenceSpace();
+      session.inputSources.forEach(inputSource => {
+        if (inputSource.targetRayMode === "tracked-pointer") {
+          const controller = inputSource === controller1 ? controller1 : controller2;
+          const ray = controller.getObjectByName('controllerRay');
+
+          if (ray) {
+            const pose = frame.getPose(inputSource.targetRaySpace, referenceSpace);
+            if (pose) {
+              controller.position.copy(pose.transform.position);
+              controller.quaternion.copy(pose.transform.orientation);
+            }
+          }
+        }
+      });
     }
 
-    // Update ThreeMeshUI components
+    updateControllerRays();
     ThreeMeshUI.update();
-
     renderer.render(scene, camera);
   });
 }
