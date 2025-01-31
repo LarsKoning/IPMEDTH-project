@@ -95,7 +95,7 @@ function createControllerRay() {
 
   const rayLine = new THREE.Line(rayGeometry, rayMaterial);
   rayLine.name = 'controllerRay';
-  rayLine.scale.z = 5; // 5 meter long ray
+  rayLine.scale.z = .75; // 5 meter long ray
 
   return rayLine;
 }
@@ -104,16 +104,36 @@ function updateControllerRays() {
   [controller1, controller2].forEach(controller => {
     const ray = controller.getObjectByName('controllerRay');
 
-    if (ray) {
-      ray.visible = inVR;  // Ensure visibility in VR mode
-      ray.scale.z = 5; // 5 meters long
+    if (ray && inVR) {
+      raycaster.set(
+        controller.position, 
+        new THREE.Vector3(0, 0, -1).applyQuaternion(controller.quaternion)
+      );
 
-      // Ensure ray is correctly positioned and oriented
-      ray.position.set(0, 0, 0);
-      ray.quaternion.identity();
+      const intersects = raycaster.intersectObjects(intersectionObjects, true);
+      
+      console.log("VR Controller Ray Intersections:", intersects.length);
+      
+      if (intersects.length > 0) {
+        let button = intersects[0].object.parent; // Go up to the Block
+        
+        if (button && button.isUI) {
+          try {
+            console.log("Attempting to hover:", button);
+            // Directly change state
+            button.set({
+              backgroundColor: new THREE.Color(0xe6e6e6),
+              fontColor: new THREE.Color(0x0d275e)
+            });
+          } catch (error) {
+            console.error("Hover state error:", error);
+          }
+        }
+      }
     }
   });
 }
+
 
 
 function onEnterVR() {
@@ -126,10 +146,13 @@ function onEnterVR() {
   controller1 = renderer.xr.getController(0);
   controller2 = renderer.xr.getController(1);
 
+ // ✅ Ensure controllers have rays attached
   if (!controller1.getObjectByName("controllerRay")) {
+    console.log("Quest 2 - Adding controllerRay to Controller 1");
     controller1.add(createControllerRay());
   }
   if (!controller2.getObjectByName("controllerRay")) {
+    console.log("Quest 2 - Adding controllerRay to Controller 2");
     controller2.add(createControllerRay());
   }
 
@@ -146,7 +169,7 @@ function onEnterVR() {
       const cameraHeight = xrCamera.position.y || 1.6; // Default to average VR height if not available
 
       // Position the container in front of the user at eye level
-      container.position.set(0, cameraHeight, -0.75);
+      container.position.set(0, cameraHeight, -1);
 
       // Scale the entire container
       container.scale.set(scaleFactor, scaleFactor, scaleFactor);
@@ -181,6 +204,7 @@ function onExitVR() {
 }
 
 function createUI() {
+  intersectionObjects.length = 0; // Clear old UI objects
   const distance = -2; // Distance from camera to container
   const height =
     4 * Math.tan((camera.fov * Math.PI) / 360) * Math.abs(distance); // Full visible height
@@ -269,6 +293,17 @@ function createUI() {
       backgroundColor: new THREE.Color(0x0d275e),
       borderRadius: 0.05,
       fontWeight: "700",
+      // Add state management directly here
+      states: {
+        idle: {
+          backgroundColor: new THREE.Color(0x0d275e),
+          fontColor: new THREE.Color(0xe6e6e6)
+        },
+        hovered: {
+          backgroundColor: new THREE.Color(0xe6e6e6),
+          fontColor: new THREE.Color(0x0d275e)
+        }
+      }
     });
 
     const buttonText = new ThreeMeshUI.Text({
@@ -279,20 +314,25 @@ function createUI() {
 
     buttonBlock.add(buttonText);
 
-    buttonBlock.setupState({
-      state: "hovered",
-      attributes: {
-        backgroundColor: new THREE.Color(0xe6e6e6),
-        fontColor: new THREE.Color(0x0d275e),
-      },
-    });
-    buttonBlock.setupState({
-      state: "idle",
-      attributes: {
-        backgroundColor: new THREE.Color(0x0d275e),
-        fontColor: new THREE.Color(0xe6e6e6),
-      },
-    });
+    const buttonMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(width / 7, height / 12), // Same as button dimensions
+      new THREE.MeshBasicMaterial({ visible: false }) // Invisible but detectable
+    );
+
+    buttonBlock.add(buttonMesh);
+    buttonBlock.mesh = buttonMesh;
+
+    buttonBlock.isUI = true;
+    intersectionObjects.push(buttonMesh);
+    buttonMesh.onSelect = () => {
+      console.log(`Button "${option.label}" clicked.`);
+      loadScene(option.scene);
+    };
+  
+    buttonContainer.add(buttonBlock);
+
+    buttonBlock.geometry = new THREE.PlaneGeometry(0.5, 0.2);  // Give it a geometry
+    buttonBlock.material = new THREE.MeshBasicMaterial({ visible: false });
 
     // Add a console log when the button is clicked
     buttonBlock.onSelect = () => {
@@ -305,7 +345,10 @@ function createUI() {
     buttonBlock.isUI = true;
     intersectionObjects.push(buttonBlock);
     buttonContainer.add(buttonBlock);
+    // buttonContainer.isUI = true;
   });
+
+  console.log("Updated Intersection Objects:", intersectionObjects);
 
   container.add(buttonContainer);
 }
@@ -383,17 +426,29 @@ function onMouseClick(event) {
 
 function onSelectStart(event) {
   const controller = event.target;
-  const intersections = raycaster.intersectObjects(intersectionObjects, true);
+  
+  if (!controller) return;
 
-  if (intersections.length > 0) {
-    let button = intersections[0].object;
+  // Use global raycaster for intersection
+  raycaster.set(
+    controller.position, 
+    new THREE.Vector3(0, 0, -1).applyQuaternion(controller.quaternion)
+  );
 
-    // Traverse up to find the parent Block with onSelect
+  const intersects = raycaster.intersectObjects(intersectionObjects, true);
+
+  console.log("VR Intersections Found:", intersects.length);
+
+  if (intersects.length > 0) {
+    let button = intersects[0].object;
+
+    // Traverse up to find the parent with onSelect
     while (button && !button.onSelect) {
       button = button.parent;
     }
 
     if (button && button.onSelect) {
+      console.log(`VR - Clicking button: ${button.content || "Unknown"}`);
       button.onSelect();
     }
   }
@@ -423,10 +478,11 @@ function animate() {
     if (frame) {
       const session = renderer.xr.getSession();
       const referenceSpace = renderer.xr.getReferenceSpace();
-      session.inputSources.forEach(inputSource => {
+      session.inputSources.forEach((inputSource) => {
+        // ✅ Ensure the controller is using a ray-based pointer
         if (inputSource.targetRayMode === "tracked-pointer") {
           const controller = inputSource === controller1 ? controller1 : controller2;
-          const ray = controller.getObjectByName('controllerRay');
+          const ray = controller.getObjectByName("controllerRay");
 
           if (ray) {
             const pose = frame.getPose(inputSource.targetRaySpace, referenceSpace);
@@ -435,6 +491,8 @@ function animate() {
               controller.quaternion.copy(pose.transform.orientation);
             }
           }
+        } else {
+          console.warn("Quest 2 - Controller is NOT using tracked-pointer mode!");
         }
       });
     }
@@ -444,6 +502,7 @@ function animate() {
     renderer.render(scene, camera);
   });
 }
+
 
 
 
