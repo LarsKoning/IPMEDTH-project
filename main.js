@@ -531,20 +531,32 @@ function animate() {
   });
 }
 
-
-
-
 export async function loadScene(sceneId) {
   // Clear previous scene
   while (scene.children.length > 0) {
     scene.remove(scene.children[0]);
   }
+  
   if (currentAnimation) {
     cancelAnimationFrame(currentAnimation);
   }
-  addLights();
 
+  addLights();
   intersectionObjects.length = 0; // Clear the intersection objects array
+
+  // Ensure VR controllers and rays are RE-ADDED after scene switch
+  scene.add(controller1);
+  scene.add(controller2);
+
+  // ✅ Reattach controller rays if they were removed
+  if (!controller1.getObjectByName("controllerRay")) {
+    controller1.add(createControllerRay());
+  }
+  if (!controller2.getObjectByName("controllerRay")) {
+    controller2.add(createControllerRay());
+  }
+
+  console.log("✅ Controllers and rays re-attached after scene change.");
 
   // Initiate GUI
   gui = new GUI();
@@ -556,22 +568,23 @@ export async function loadScene(sceneId) {
   switch (sceneId) {
     case "Fotos":
       const { createScene0 } = await import("./scenes/Fotos.js");
-      createScene0(scene, camera, renderer, gui, inVR);
+      createScene0(scene, camera, renderer, gui);
       break;
     case "Objects":
       const { createScene1 } = await import("./scenes/Objects.js");
-      createScene1(scene, camera, renderer, gui, controls, inVR);
+      createScene1(scene, camera, renderer, gui, controls);
       break;
     case "Panoramas":
       const { createScene2 } = await import("./scenes/Panoramas.js");
-      createScene2(scene, camera, renderer, gui, controls, inVR);
+      createScene2(scene, camera, renderer, gui, controls);
       break;
     case "Pointcloud":
       const { createScene3 } = await import("./scenes/Pointcloud.js");
-      createScene3(scene, camera, renderer, gui, inVR);
+      createScene3(scene, camera, renderer, gui);
       break;
   }
 }
+
 
 export function showMenu() {
   while (scene.children.length > 0) {
