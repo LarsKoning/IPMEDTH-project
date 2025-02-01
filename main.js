@@ -602,7 +602,11 @@ export function showMenu() {
         controls.enabled = false;
       }
     }
+    
   }
+
+  scene.add(controller1);
+  scene.add(controller2);
 
   scene.add(container);
   intersectionObjects.length = 0;
