@@ -8,7 +8,8 @@ let scene, camera, renderer, currentAnimation, gui, controls, backButtonBlock, c
   mouse = new THREE.Vector2(),
   controller1,
   controller2,
-  inVR;
+  uiBox = null,
+  inVR = false;
 
 const intersectionObjects = []; // Array to store interactive UI elements
 
@@ -80,6 +81,34 @@ export function initScene() {
   showMenu();
 }
 
+function createTopRightUI() {
+  if (uiBox) return; // Prevent duplicate UI creation
+
+  uiBox = new ThreeMeshUI.Block({
+    width: 0.5,
+    height: 0.2,
+    padding: 0.02,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: new THREE.Color(0x333333),
+    backgroundOpacity: 0.8,
+  });
+
+  const uiText = new ThreeMeshUI.Text({
+    content: "VR Mode Active",
+    fontSize: 0.05,
+    fontColor: new THREE.Color(0xffffff),
+  });
+
+  uiBox.add(uiText);
+
+  // Position it in front-right of user
+  uiBox.position.set(0.6, 1.5, -1);
+  uiBox.rotation.y = -0.2;
+
+  scene.add(uiBox);
+}
+
 function createControllerRay() {
   const rayGeometry = new THREE.BufferGeometry().setFromPoints([
     new THREE.Vector3(0, 0, 0),
@@ -110,7 +139,7 @@ function updateControllerRays() {
 
     if (ray && inVR) {
       raycaster.set(
-        controller.position, 
+        controller.position,
         new THREE.Vector3(0, 0, -1).applyQuaternion(controller.quaternion)
       );
 
@@ -536,7 +565,13 @@ export async function loadScene(sceneId) {
   while (scene.children.length > 0) {
     scene.remove(scene.children[0]);
   }
-  
+
+  if (uiBox) {
+    scene.remove(uiBox);
+    uiBox.geometry.dispose();
+    uiBox = null; // Reset UI
+  }
+
   if (currentAnimation) {
     cancelAnimationFrame(currentAnimation);
   }
@@ -569,6 +604,9 @@ export async function loadScene(sceneId) {
     case "Fotos":
       const { createScene0 } = await import("./scenes/Fotos.js");
       createScene0(scene, camera, renderer, gui);
+      if (inVR) {
+        createTopRightUI(); // Only in VR & Fotos
+      }
       break;
     case "Objects":
       const { createScene1 } = await import("./scenes/Objects.js");
@@ -602,7 +640,7 @@ export function showMenu() {
         controls.enabled = false;
       }
     }
-    
+
   }
 
   scene.add(controller1);
