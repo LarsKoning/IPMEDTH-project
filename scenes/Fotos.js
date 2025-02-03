@@ -1,12 +1,20 @@
 import { getDownloadURL, listAll } from "firebase/storage";
 import { imagesRef } from "../API.js";
 
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+
 export function createScene0(scene, camera, renderer, gui) {
   let currentImage = null;
   let currentCanvas = document.createElement("canvas");
   let currentContext = currentCanvas.getContext("2d");
   let currentFile = null;
   let controllers = {};
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableZoom = true; // Zorg ervoor dat zoomen is ingeschakeld
+  controls.enablePan = false; // Optioneel: voorkomt panning
+  controls.enableRotate = false; // Optioneel: voorkomt rotatie als dat niet nodig is
+  controls.zoomSpeed = 1.2; // Pas de zoomsnelheid aan
 
   // Settings object with default values
   const defaultSettings = {
@@ -26,18 +34,19 @@ export function createScene0(scene, camera, renderer, gui) {
   function clearAllSettings() {
     // Get all keys from localStorage that start with 'imageSettings_'
     Object.keys(localStorage)
-      .filter(key => key.startsWith('imageSettings_'))
-      .forEach(key => localStorage.removeItem(key));
-    
+      .filter((key) => key.startsWith("imageSettings_"))
+      .forEach((key) => localStorage.removeItem(key));
+
     // Reset current settings to default
-    Object.keys(defaultSettings).forEach(key => {
+    Object.keys(defaultSettings).forEach((key) => {
       settings[key] = defaultSettings[key];
       if (controllers[key]) {
-        controllers[key].object[controllers[key].property] = defaultSettings[key];
+        controllers[key].object[controllers[key].property] =
+          defaultSettings[key];
         controllers[key].updateDisplay();
       }
     });
-    
+
     // If there's a current image, apply the reset settings
     if (currentFile) {
       applyAdjustments();
@@ -47,50 +56,55 @@ export function createScene0(scene, camera, renderer, gui) {
   // Function to reset current image settings
   function resetCurrentImage() {
     if (!currentFile) return;
-    
+
     // Remove settings from localStorage for current image
     localStorage.removeItem(`imageSettings_${currentFile.name}`);
-    
+
     // Reset current settings to default
-    Object.keys(defaultSettings).forEach(key => {
+    Object.keys(defaultSettings).forEach((key) => {
       settings[key] = defaultSettings[key];
       if (controllers[key]) {
-        controllers[key].object[controllers[key].property] = defaultSettings[key];
+        controllers[key].object[controllers[key].property] =
+          defaultSettings[key];
         controllers[key].updateDisplay();
       }
     });
-    
+
     applyAdjustments();
   }
 
   function saveSettings() {
     if (!currentFile) return;
-    
+
     const imageSettings = {
       exposure: settings.exposure,
       highlights: settings.highlights,
-      shadows: settings.shadows
+      shadows: settings.shadows,
     };
-    
-    localStorage.setItem(`imageSettings_${currentFile.name}`, JSON.stringify(imageSettings));
+
+    localStorage.setItem(
+      `imageSettings_${currentFile.name}`,
+      JSON.stringify(imageSettings)
+    );
   }
 
   function loadSettings(imageName) {
     const savedSettings = localStorage.getItem(`imageSettings_${imageName}`);
     if (savedSettings) {
       const parsedSettings = JSON.parse(savedSettings);
-      
+
       // Update each setting and its controller
-      Object.keys(parsedSettings).forEach(key => {
+      Object.keys(parsedSettings).forEach((key) => {
         settings[key] = parsedSettings[key];
         if (controllers[key]) {
-          controllers[key].object[controllers[key].property] = parsedSettings[key];
+          controllers[key].object[controllers[key].property] =
+            parsedSettings[key];
           controllers[key].updateDisplay();
         }
       });
     } else {
       // Reset to defaults
-      Object.keys(settings).forEach(key => {
+      Object.keys(settings).forEach((key) => {
         settings[key] = 0;
         if (controllers[key]) {
           controllers[key].object[controllers[key].property] = 0;
@@ -132,7 +146,7 @@ export function createScene0(scene, camera, renderer, gui) {
   // Modified selectImage function to ensure proper order of operations
   function selectImage(file) {
     currentFile = file;
-    
+
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
@@ -145,20 +159,21 @@ export function createScene0(scene, camera, renderer, gui) {
   }
 
   // Initialize GUI
-  
 
   const resetFolder = gui.addFolder("");
   const resetElement = resetFolder.domElement;
   resetElement.classList.add("reset-buttons-container");
 
   // Add reset buttons with custom styling
-  const resetCurrentController = resetFolder.add({ resetCurrent: resetCurrentImage }, 'resetCurrent')
-    .name('Reset deze afbeelding');
-  resetCurrentController.domElement.classList.add('reset-button');
+  const resetCurrentController = resetFolder
+    .add({ resetCurrent: resetCurrentImage }, "resetCurrent")
+    .name("Reset deze afbeelding");
+  resetCurrentController.domElement.classList.add("reset-button");
 
-  const resetAllController = resetFolder.add({ resetAll: clearAllSettings }, 'resetAll')
-    .name('Reset alle afbeeldingen');
-  resetAllController.domElement.classList.add('reset-button');
+  const resetAllController = resetFolder
+    .add({ resetAll: clearAllSettings }, "resetAll")
+    .name("Reset alle afbeeldingen");
+  resetAllController.domElement.classList.add("reset-button");
 
   // Store controller references when creating them
   const editing = gui.addFolder("Bewerkings opties");
@@ -180,9 +195,9 @@ export function createScene0(scene, camera, renderer, gui) {
     .onChange(applyAdjustments)
     .onFinishChange(saveSettings);
 
-    var mediaViewerFolder = gui.addFolder("Galerij");
-    const folderElement = mediaViewerFolder.domElement;
-    folderElement.classList.add("photosFolder");
+  var mediaViewerFolder = gui.addFolder("Galerij");
+  const folderElement = mediaViewerFolder.domElement;
+  folderElement.classList.add("photosFolder");
 
   function applyAdjustments() {
     if (!currentFile || !currentContext) return;
@@ -286,6 +301,7 @@ export function createScene0(scene, camera, renderer, gui) {
   }
 
   function animate() {
+    controls.update(); // Update controls bij elke frame
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
   }
