@@ -151,22 +151,6 @@ export function createScene0(scene, camera, renderer, gui) {
   }
 
   // Initialize GUI
-
-  const resetFolder = gui.addFolder("");
-  const resetElement = resetFolder.domElement;
-  resetElement.classList.add("reset-buttons-container");
-
-  // Add reset buttons with custom styling
-  const resetCurrentController = resetFolder
-    .add({ resetCurrent: resetCurrentImage }, "resetCurrent")
-    .name("Reset deze afbeelding");
-  resetCurrentController.domElement.classList.add("reset-button");
-
-  const resetAllController = resetFolder
-    .add({ resetAll: clearAllSettings }, "resetAll")
-    .name("Reset alle afbeeldingen");
-  resetAllController.domElement.classList.add("reset-button");
-
   var mediaViewerFolder = gui.addFolder("Galerij");
   const folderElement = mediaViewerFolder.domElement;
   folderElement.classList.add("photosFolder");
@@ -190,6 +174,21 @@ export function createScene0(scene, camera, renderer, gui) {
     .name("Schaduwen")
     .onChange(applyAdjustments)
     .onFinishChange(saveSettings);
+
+    const resetFolder = gui.addFolder("");
+    const resetElement = resetFolder.domElement;
+    resetElement.classList.add("reset-buttons-container");
+
+    // Add reset buttons with custom styling
+    const resetCurrentController = resetFolder
+      .add({ resetCurrent: resetCurrentImage }, "resetCurrent")
+      .name("Reset deze afbeelding");
+    resetCurrentController.domElement.classList.add("reset-button");
+
+    const resetAllController = resetFolder
+      .add({ resetAll: clearAllSettings }, "resetAll")
+      .name("Reset alle afbeeldingen");
+    resetAllController.domElement.classList.add("reset-button");
 
   function applyAdjustments() {
     if (!currentFile || !currentContext) return;
